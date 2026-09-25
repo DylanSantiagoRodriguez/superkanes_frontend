@@ -1,0 +1,14 @@
+ .panel { background: var(--surface); border: 1px solid var(--color-border); border-radius: var(--radius); overflow: hidden; }
+.panelHeader { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 24px; }
+.panelHeader h2 { font-size: 17px; margin: 0; font-weight: 650; }
+.panelHeader p { color: var(--color-muted); margin: 4px 0 0; font-size: 13px; }
+.badge { display: inline-flex; width: fit-content; white-space: nowrap; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.neutral { color: #54635e; background: #edf1ee; }
+.success { color: #236047; background: #e5f2e9; }
+.warning { color: #80551b; background: #fcf0d9; }
+.info { color: #386477; background: #e8f1f6; }
+.stat { border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--surface); padding: 22px; }
+.stat > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--color-muted); }
+.symbol { color: var(--color-primary); font-size: 22px; }
+.stat strong { display: block; font-size: 34px; font-weight: 650; letter-spacing: -1px; margin: 8px 0 0; }
+.stat p { color: var(--color-muted); font-size: 12px; margin: 4px 0 0; }
