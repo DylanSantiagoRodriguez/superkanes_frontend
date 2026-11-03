@@ -1,4 +1,4 @@
-﻿import { useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { authErrorMessage, login } from '../api/auth'
 import type { Session } from '../api/auth'
@@ -45,7 +45,7 @@ export function LoginPage({ onLogin, message }: { onLogin: (session: Session) =>
       <section className={styles.access} aria-labelledby="login-title">
         <span className={styles.topNote}><span aria-hidden="true">●</span> TU ESPACIO DE TRABAJO</span>
         <div className={styles.formContainer}>
-          <div className={styles.welcomeIcon} aria-hidden="true">?</div>
+          <div className={styles.welcomeIcon} aria-hidden="true">✳</div>
               <p className={styles.eyebrow}>UN NUEVO DÍA PARA CUIDAR</p>
               <h2 id="login-title">Qué bueno verte de nuevo.</h2>
               <p className={styles.subtitle}>Inicia sesión para acceder a tu clínica.</p>

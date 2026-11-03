@@ -1,0 +1,345 @@
+.heading {
+  margin-bottom: 26px;
+}
+.heading h1 {
+  font-size: clamp(25px, 3vw, 34px);
+  margin-bottom: 8px;
+  letter-spacing: -0.7px;
+}
+.heading h1:focus {
+  outline: none;
+}
+.heading p {
+  color: var(--color-muted);
+  font-size: 14px;
+}
+.eyebrow {
+  color: var(--color-primary) !important;
+  font-size: 10px !important;
+  letter-spacing: 1.5px;
+  font-weight: 650;
+}
+.orgLabel {
+  display: grid;
+  gap: 6px;
+  font-size: 11px;
+}
+.orgLabel select {
+  width: 100%;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  padding: 7px;
+  border-radius: 5px;
+  font-size: 12px;
+  color: inherit;
+}
+.resourceSelect {
+  display: grid;
+  gap: 6px;
+  max-width: 380px;
+  margin-bottom: 22px;
+  font-size: 13px;
+}
+.resourceSelect select,
+.toolbar input,
+.toolbar select,
+.formGrid input,
+.formGrid select,
+.formGrid textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: white;
+  color: inherit;
+  font: inherit;
+}
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.summary {
+  display: grid;
+  text-align: left;
+  padding: 22px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: white;
+  color: inherit;
+}
+.summary > span {
+  font-size: 14px;
+}
+.summary strong {
+  font-size: 36px;
+  margin: 10px 0;
+}
+.summary small {
+  color: var(--color-muted);
+}
+.moduleGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 28px;
+}
+.moduleGrid button {
+  display: grid;
+  gap: 12px;
+  text-align: left;
+  color: inherit;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 24px;
+}
+.moduleGrid button:hover,
+.summary:hover {
+  border-color: var(--color-primary);
+}
+.moduleGrid span {
+  font-size: 25px;
+  color: var(--color-primary);
+}
+.moduleGrid small {
+  color: var(--color-muted);
+}
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.actions button,
+.pagination button,
+.tableScroll button,
+.dialogHeader button,
+.error button {
+  border: 1px solid var(--color-border);
+  background: white;
+  color: var(--color-primary);
+  padding: 9px 13px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.actions .primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+.actions .danger {
+  color: #8f342e;
+  border-color: #dfb1aa;
+}
+.actions button:disabled,
+.pagination button:disabled {
+  opacity: 0.5;
+}
+.toolbar {
+  display: flex;
+  gap: 16px;
+  padding: 0 24px 20px;
+}
+.toolbar label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  min-width: 0;
+}
+.toolbar label:first-child {
+  flex: 1;
+}
+.tableScroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.tableScroll table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+.tableScroll th {
+  background: #f5f8f5;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.tableScroll th,
+.tableScroll td {
+  padding: 14px 20px;
+  border-bottom: 1px solid #edf0ed;
+  max-width: 280px;
+  overflow-wrap: anywhere;
+}
+.tableScroll button {
+  white-space: nowrap;
+}
+.pagination {
+  padding: 18px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  font-size: 12px;
+}
+.empty {
+  padding: 32px 24px;
+  text-align: center;
+  color: var(--color-muted);
+}
+.notice,
+.success,
+.error {
+  border-radius: 8px;
+  padding: 14px 18px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.notice {
+  color: #765320;
+  background: #fcf2df;
+}
+.success {
+  color: #235c47;
+  background: #e7f3e9;
+}
+.error,
+.fieldError {
+  color: #8f342e;
+  background: #fff0ee;
+}
+.fieldError {
+  padding: 8px;
+  font-size: 12px;
+}
+.error button {
+  margin-left: 12px;
+}
+.dialog {
+  width: min(760px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 28px;
+  color: inherit;
+  overflow-y: auto;
+}
+.dialog::backdrop {
+  background: #183b3077;
+}
+.dialogHeader {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+.dialogHeader h2 {
+  font-size: 22px;
+  overflow-wrap: anywhere;
+  margin: 0;
+}
+.dialogHeader p {
+  margin: 5px 0 0;
+  color: var(--color-muted);
+}
+.details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.details dt {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+.details dd {
+  margin: 5px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+.formGrid {
+  border: 0;
+  padding: 0;
+  margin: 0 0 24px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.formGrid > div {
+  min-width: 0;
+}
+.formGrid label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+.formGrid input,
+.formGrid select,
+.formGrid textarea {
+  font-size: 14px;
+}
+.formGrid textarea {
+  resize: vertical;
+}
+.formGrid button {
+  background: transparent;
+  border: 0;
+  padding: 8px 0;
+  color: var(--color-primary);
+  font-size: 12px;
+  text-align: left;
+}
+.wide {
+  grid-column: 1 / -1;
+}
+.hint {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+.footer {
+  color: var(--color-muted);
+  font-size: 11px;
+  margin-top: 35px;
+}
+@media (max-width: 1100px) {
+  .summaryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .moduleGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 540px) {
+  .moduleGrid,
+  .formGrid,
+  .details {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .summaryGrid {
+    gap: 10px;
+  }
+  .summary {
+    padding: 16px;
+  }
+  .toolbar,
+  .pagination {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .dialog {
+    padding: 20px;
+  }
+}
+
+.documentDialog { width: min(1200px, 96vw); max-width: 96vw; }
+.patientPhoto { margin: 0 0 18px; display: flex; align-items: center; gap: 20px; }
+.patientPhoto img { width: 140px; height: 140px; object-fit: cover; border-radius: 18px; border: 1px solid #cbd5df; }
+.patientPhoto figcaption { font-size: 1.2rem; font-weight: 700; }
+.photoPlaceholder { width: 140px; min-height: 100px; display: grid; place-content: center; padding: 12px; background: #edf4f2; border-radius: 18px; font-size: .8rem; text-align: center; }
+.details dd { white-space: pre-wrap; overflow-wrap: anywhere; }

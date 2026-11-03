@@ -1,0 +1,61 @@
+const assert = require('node:assert/strict');
+const {chromium} = require('playwright');
+module.exports = async function petBrowser({base,adminToken,user,speciesId,otherSpeciesId,otherBreedId,tutorId}) {
+  const browser=await chromium.launch();
+  const page=await browser.newPage();
+  const origin=process.env.TEST_FRONTEND_URL || 'http://localhost:5174';
+  const breedQueries=[];
+  await page.route('**/api/v1/**',async route=>{
+    const url=new URL(route.request().url());
+    const cors={'access-control-allow-origin':origin,'access-control-allow-credentials':'true'};
+    if(url.pathname==='/api/v1/auth/refresh') return route.fulfill({json:{accessToken:adminToken,userId:user,expiresIn:3600},headers:cors});
+    if(route.request().method()==='OPTIONS') return route.fulfill({status:204,headers:{...cors,'access-control-allow-headers':'*','access-control-allow-methods':'GET,POST,PATCH,DELETE,OPTIONS'}});
+    if(url.pathname==='/api/v1/resources/raza') breedQueries.push(url.searchParams);
+    const response=await route.fetch({url:base+url.pathname+url.search});
+    await route.fulfill({response,headers:{...response.headers(),...cors}});
+  });
+  try {
+    await page.goto(origin);
+    await page.getByRole('button',{name:'Mascotas y tutores',exact:true}).click();
+    await page.getByRole('button',{name:'Nuevo registro',exact:true}).click();
+    const breed=page.locator('#field-raza_id');
+    assert.ok(await breed.isDisabled());
+    await page.locator('#field-nombre').fill('Paciente creado desde navegador');
+    await page.locator('#field-codigo').fill('PET-BROWSER');
+    await page.locator(`#field-especie_id option[value="${speciesId}"]`).waitFor({state:'attached'});
+    await page.locator('#field-especie_id').selectOption(speciesId);
+    await page.locator('#field-raza_id option').nth(1).waitFor({state:'attached'});
+    assert.equal(await page.locator(`#field-raza_id option[value="${otherBreedId}"]`).count(),0);
+    const breedField=page.locator('div').filter({has:page.locator(':scope > label[for="field-raza_id"]')});
+    await breedField.getByRole('button',{name:'Cargar más opciones',exact:true}).click();
+    await page.waitForFunction(()=>document.querySelectorAll('#field-raza_id option').length===28);
+    assert.ok(breedQueries.some(q=>q.has('after')&&JSON.parse(q.get('filter')).especie_id===speciesId));
+    await breed.selectOption({index:1});
+    await page.locator('#field-especie_id').selectOption(otherSpeciesId);
+    assert.equal(await breed.inputValue(),'');
+    await page.locator(`#field-raza_id option[value="${otherBreedId}"]`).waitFor({state:'attached'});
+    assert.equal(await page.locator('#field-raza_id option').count(),2);
+    // Rapid changes must not restore a previous species' options or selection.
+    await page.locator('#field-especie_id').selectOption(speciesId);
+    await page.locator('#field-especie_id').selectOption(otherSpeciesId);
+    await page.locator(`#field-raza_id option[value="${otherBreedId}"]`).waitFor({state:'attached'});
+    await breed.selectOption(otherBreedId);
+    await page.locator('#field-tutor_principal_id').selectOption(tutorId);
+    const saved=page.waitForResponse(r=>r.url().endsWith('/resources/mascota')&&r.request().method()==='POST');
+    await page.getByRole('button',{name:'Guardar',exact:true}).click();
+    const response=await saved;
+    assert.equal(response.status(),201);
+    const pet=(await response.json()).data;
+    assert.equal(pet.especie_id,otherSpeciesId);assert.equal(pet.raza_id,otherBreedId);
+    await page.getByText('Cambios guardados.',{exact:true}).waitFor();
+    await page.getByRole('button',{name:'Ver Paciente creado desde navegador',exact:true}).click();
+    await page.getByRole('button',{name:'Editar',exact:true}).click();
+    await page.locator('#field-especie_id').selectOption(speciesId);
+    assert.equal(await breed.inputValue(),'');
+    const edited=page.waitForResponse(r=>r.url().endsWith(`/resources/mascota/${pet.id}`)&&r.request().method()==='PATCH');
+    await page.getByRole('button',{name:'Guardar',exact:true}).click();
+    const editResponse=await edited;assert.equal(editResponse.status(),200);
+    assert.equal((await editResponse.json()).data.raza_id,null);
+    console.log('OK: Chromium: alta de mascota, razas por especie, paginación filtrada, cambio rápido y edición sin raza.');
+  } catch(error) {await page.screenshot({path:'/tmp/superkanes-pet-failure.png'});throw error;} finally {await browser.close();}
+};

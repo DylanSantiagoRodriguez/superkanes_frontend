@@ -22,3 +22,4 @@
 .skip:focus { top: 10px; left: 10px; }
 @media (max-width: 1050px) { .sidebar { width: 200px; padding-inline: 12px; } .main { padding: 26px 22px; } .topbar { padding-inline: 22px; } }
 @media (max-width: 720px) { .shell { display: block; } .sidebar { position: static; width: 100%; height: auto; padding: 16px; } .brand { padding: 0; } .clinic,.label,.bottom { display: none; } .sidebar nav { display: flex; overflow-x: auto; margin-top: 15px; padding-bottom: 5px; } .sidebar nav button { white-space: nowrap; } .logout { align-self: flex-end; border: 0; padding-top: 10px; } .topbar { padding: 12px 16px; min-height: 55px; flex-wrap: wrap; } .main { padding: 24px 16px; } }
+@media (max-width: 720px) { .clinic { display: block; margin: 16px 0 0; max-width: 100%; } }

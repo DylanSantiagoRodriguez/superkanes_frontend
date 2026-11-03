@@ -1,61 +1,65 @@
-﻿# Superkanes · Frontend web
+# Superkanes · Frontend web
 
-Proyecto independiente con React, TypeScript y Vite. Requiere Node.js 24 y npm.
+React, TypeScript y Vite. Requiere Node.js 24 y npm. El alcance de integración está documentado en [spec.md](spec.md), conforme a la [constitución](../CONSTITUCION.md).
 
 ## Desarrollo
 
-Desde la carpeta frontend:
-
-```powershell
-npm.cmd ci
-Copy-Item .env.example .env
-npm.cmd run dev
+```sh
+npm ci
+npm run dev -- --host localhost --port 5173 --strictPort
 ```
 
-Abrir http://localhost:5173. Copiar la plantilla solo la primera vez; no sobrescribir una configuración existente.
+Abrir http://localhost:5173. `VITE_API_URL` apunta por defecto a `http://localhost:3000/api/v1`; para cambiarla se puede usar `.env.local`. Las variables `VITE_` son públicas: nunca contienen secretos.
 
-VITE_API_URL apunta por defecto a http://localhost:3000/api/v1. Las variables VITE_ son públicas y se incorporan durante la compilación: nunca guardar secretos. Si cambias .env, reinicia Vite; en producción vuelve a compilar.
+La API y PostgreSQL deben estar disponibles. CORS debe admitir el origen del frontend y ambas aplicaciones deben usar el mismo hostname para la cookie `SameSite=Strict`. En producción se requieren HTTPS y los orígenes correspondientes. Swagger no es una dependencia de ejecución del frontend.
 
-El backend se inicia por separado siguiendo su README. CORS debe permitir http://localhost:5173, como indica backend/.env.example. Usa el mismo hostname en frontend y API para que la cookie de sesión funcione con SameSite=strict. La interfaz puede abrirse con el backend apagado, pero el acceso requiere backend y base de datos disponibles.
+## Integración
+
+- Login, restauración y renovación de sesión por cookie HttpOnly; token de acceso únicamente en memoria. Logout revoca la sesión.
+- Selección de organización según `/auth/me`, con limpieza de las vistas al cambiarla.
+- Catálogo autorizado `/resources` para campos, relaciones, estados y permisos efectivos.
+- Las 47 colecciones se distribuyen entre agenda, mascotas y tutores, historia clínica, peluquería, vacunación, reportes y configuración.
+- Listas reales, paginación por cursor, búsqueda dentro de la página, filtro de estado, detalle y formularios según permisos. Las altas usan `Idempotency-Key`; las modificaciones y bajas usan `If-Match`.
+- Los resúmenes muestran registros accesibles. `25+` indica que existen páginas adicionales, no un total exacto.
+- El alta de mascotas exige tutor principal; su transferencia utiliza el endpoint específico y conserva los vínculos históricos.
+- Las bajas solicitan confirmación y distinguen eliminación, cancelación y desactivación.
+- La navegación mantiene la sección en memoria y regresa al resumen al recargar. No se almacenan datos clínicos ni tokens en localStorage.
+
+Los reportes emitidos, auditoría y eventos de salida se consultan en modo de solo lectura. La emisión de reportes, envío de recordatorios, carga/análisis binario de archivos y captura de firmas siguen requiriendo sus procesos específicos. El listado de usuarios no sustituye el alta de cuentas y credenciales. La UI indica estos límites y no simula resultados.
+
+Los formularios usan las reglas del catálogo y el backend verifica reglas clínicas, autoría, relaciones y estados en cada escritura. Los formularios de plantillas y contenido estructurado admiten JSON según el esquema clínico; no constituyen un editor visual de plantillas.
+
+## Organización
+
+- `src/App.tsx`: ciclo de sesión.
+- `src/features/auth`: acceso y contrato de autenticación.
+- `src/features/workspace`: navegación, catálogo, listas, detalle y formularios.
+- `src/shared/api/http.ts`: transporte HTTP y errores.
+- `src/shared/layout`: estructura adaptable.
+- `src/shared/ui`: componentes compartidos.
 
 ## Verificación
 
-```powershell
-npm.cmd run lint
-npm.cmd run build
-npm.cmd run preview
+```sh
+npm run build
+npm run lint
+npm run preview
 ```
 
-build verifica TypeScript y genera dist/. preview permite revisar la compilación localmente; no es un servidor de producción. Para consultar la API desde preview, permite también su origen en CORS. En producción configura HTTPS y el origen real de la web en el backend.
+`build` verifica TypeScript y compila. `preview` permite inspección local de la compilación; su origen también debe estar permitido en CORS.
 
-## Alcance
+## Fotos y editor de historias clínicas
 
-Pantalla de inicio de sesión adaptable para clínica veterinaria y peluquería, con validación nativa de campos, mostrar/ocultar contraseña, prevención de envíos duplicados y mensajes de error. Utiliza POST /api/v1/auth/login con client=web, credenciales de cookie y cabecera X-CSRF-Protection.
+En **Mascotas y tutores → Mascotas**, abre **Nuevo registro** o **Editar**: la ficha permite cargar una foto JPEG/PNG/WebP, verla junto al nombre y guardarla como foto principal. El permiso de archivos y MinIO deben estar configurados. No se exponen claves S3 en el navegador.
 
-El token de acceso se conserva ?nicamente en memoria; el backend administra la cookie HttpOnly de renovaci?n. Al autenticar se muestra el dashboard de demostraci?n. El cierre de sesi?n usa POST /api/v1/auth/logout y la expiraci?n regresa al formulario de acceso. La restauraci?n y renovaci?n autom?tica de sesi?n siguen pendientes: recargar la p?gina requiere volver a iniciar sesi?n. No hay registro p?blico.
+En **Historia clínica → Revisiones clínicas**, usa **Documento de historia clínica** para redactar texto extenso con títulos, formato, listas y alineación. **Usar estructura clínica** agrega apartados a un documento vacío. **Guardar** conserva el documento; cerrar con cambios solicita descartarlos. Los documentos cerrados se muestran en modo lectura; las correcciones se registran en una revisión nueva. No hay autoguardado ni colaboración en tiempo real.
 
-## Dashboard de demostraci?n
+El editor presenta una cinta de herramientas similar a Word y una hoja con márgenes. Permite elegir fuente, tamaño, color, resaltado, interlineado y estilos de título; incluye deshacer/rehacer, quitar formato, recuento de palabras y zoom. En móvil, desplaza horizontalmente la cinta para acceder a todas las herramientas. El formato se conserva al guardar y volver a abrir la ficha.
 
-La autenticaci?n es real; los pacientes, profesionales, citas, sede e indicadores del dashboard son ficticios. El escenario est? fechado expl?citamente el 24 de septiembre de 2026 para no presentar datos est?ticos como informaci?n actual. Ninguna interacci?n del dashboard modifica registros del backend.
+El frontend se puede ejecutar con `npm run dev` o mediante el Compose del backend. La imagen Docker usa Nginx, sirve el SPA y envía `/api/` al backend; el límite de carga admite fotos de 10 MiB. Consulta las instrucciones de MinIO, migraciones y bases existentes en [el README del backend](../superkanes_backend/README.md).
 
-- Resumen con indicadores derivados de las citas y pendientes de ejemplo.
-- Agenda con filtro de servicio, b?squeda por mascota o tutor y detalle en di?logo (Escape para cerrar).
-- Navegaci?n a vistas de alcance para mascotas y tutores, historia cl?nica, peluquer?a, vacunaci?n, reportes y configuraci?n.
-- Navegaci?n adaptable, foco de entrada a cada vista, etiquetas accesibles y estado vac?o de b?squeda.
+Verificación: `npm run build`, `npm run lint`. La prueba de Chromium `test/clinical-browser.cjs` se invoca desde la suite integrada del backend con `TEST_STORAGE=true TEST_BROWSER=true`; requiere `npx playwright install chromium` y el frontend en `http://localhost:5174`. Comprueba foto real, nombre del paciente, descarte de cambios, edición de documento extenso, guardado y reapertura.
 
-### Organizaci?n y componentes reutilizables
+El editor también está disponible directamente en **Atenciones clínicas → Nuevo registro**. El formulario selecciona el profesional vinculado a tu sesión, muestra una estructura clínica inicial y guarda atención e historia juntas con **Guardar atención e historia**. Usa **Ir al documento** para saltar al área de redacción. Desde el detalle de la atención puedes leer y editar sus historias en borrador.
 
-- `src/App.tsx`: coordina la sesi?n y selecciona login o dashboard. Ning?n token se entrega a componentes de demostraci?n.
-- `src/features/auth`: formulario y API de autenticaci?n.
-- `src/features/dashboard/pages/DashboardPage.tsx`: composici?n de la pantalla.
-- `src/features/dashboard/components/AppointmentList.tsx`: filtros, tabla y detalle de citas.
-- `src/features/dashboard/data/mockDashboard.ts`: escenario de ejemplo y alcance de los m?dulos.
-- `src/features/dashboard/types.ts`: tipos del escenario.
-- `src/shared/layout/AppShell.tsx`: estructura de navegaci?n, cabecera y espacio de trabajo, configurable mediante props.
-- `src/shared/ui`: `Panel`, `Badge` y `StatCard`, independientes de los m?dulos de negocio.
-- `src/shared/api/http.ts`: cliente HTTP compartido.
-- `src/index.css`: estilos globales y variables de dise?o; cada componente usa CSS Modules.
-
-Los m?dulos del men? son vistas previas, no CRUD terminados ni permisos efectivos. La selecci?n es local y vuelve al resumen al iniciar una sesi?n. Al desarrollar cada m?dulo, mover su pantalla a su propia funcionalidad, incorporar rutas y estados de carga/error, y sustituir sus datos de ejemplo con una API tipada que respete organizaci?n y permisos del backend.
-
-Base generada con la plantilla oficial react-ts de Vite: https://vite.dev/guide/
+Al registrar o editar una mascota, selecciona primero la especie. Las razas se consultan filtradas por esa especie, incluso al cargar más opciones; cambiar de especie limpia la raza anterior. Puedes guardar sin raza si no está registrada. Si una solicitud contiene una combinación incompatible, se muestra una explicación específica en lugar de indicar que el registro desapareció.

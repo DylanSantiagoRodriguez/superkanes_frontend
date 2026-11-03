@@ -12,3 +12,4 @@
 .symbol { color: var(--color-primary); font-size: 22px; }
 .stat strong { display: block; font-size: 34px; font-weight: 650; letter-spacing: -1px; margin: 8px 0 0; }
 .stat p { color: var(--color-muted); font-size: 12px; margin: 4px 0 0; }
+@media (max-width: 540px) { .panelHeader { flex-wrap: wrap; align-items: flex-start; } }
