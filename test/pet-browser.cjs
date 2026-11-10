@@ -57,5 +57,5 @@ module.exports = async function petBrowser({base,adminToken,user,speciesId,other
     const editResponse=await edited;assert.equal(editResponse.status(),200);
     assert.equal((await editResponse.json()).data.raza_id,null);
     console.log('OK: Chromium: alta de mascota, razas por especie, paginación filtrada, cambio rápido y edición sin raza.');
-  } catch(error) {await page.screenshot({path:'/tmp/superkanes-pet-failure.png'});throw error;} finally {await browser.close();}
+  } catch(error) {await page.screenshot({path:'/tmp/superkanes-pet-failure.png'});throw error;} finally {await page.unrouteAll({behavior:'wait'}); await browser.close();}
 };

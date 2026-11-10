@@ -25,7 +25,7 @@ La API y PostgreSQL deben estar disponibles. CORS debe admitir el origen del fro
 - Las bajas solicitan confirmación y distinguen eliminación, cancelación y desactivación.
 - La navegación mantiene la sección en memoria y regresa al resumen al recargar. No se almacenan datos clínicos ni tokens en localStorage.
 
-Los reportes emitidos, auditoría y eventos de salida se consultan en modo de solo lectura. La emisión de reportes, envío de recordatorios, carga/análisis binario de archivos y captura de firmas siguen requiriendo sus procesos específicos. El listado de usuarios no sustituye el alta de cuentas y credenciales. La UI indica estos límites y no simula resultados.
+Los reportes emitidos, auditoría y eventos de salida se consultan en modo de solo lectura. La ficha clínica incorpora carga de adjuntos, emisión de PDF y registro de consentimiento con evidencia documental. El envío de recordatorios sigue sin proveedor conectado. El listado de usuarios no sustituye el alta de cuentas y credenciales. La UI indica estos límites y no simula resultados.
 
 Los formularios usan las reglas del catálogo y el backend verifica reglas clínicas, autoría, relaciones y estados en cada escritura. Los formularios de plantillas y contenido estructurado admiten JSON según el esquema clínico; no constituyen un editor visual de plantillas.
 
@@ -63,3 +63,23 @@ Verificación: `npm run build`, `npm run lint`. La prueba de Chromium `test/clin
 El editor también está disponible directamente en **Atenciones clínicas → Nuevo registro**. El formulario selecciona el profesional vinculado a tu sesión, muestra una estructura clínica inicial y guarda atención e historia juntas con **Guardar atención e historia**. Usa **Ir al documento** para saltar al área de redacción. Desde el detalle de la atención puedes leer y editar sus historias en borrador.
 
 Al registrar o editar una mascota, selecciona primero la especie. Las razas se consultan filtradas por esa especie, incluso al cargar más opciones; cambiar de especie limpia la raza anterior. Puedes guardar sin raza si no está registrada. Si una solicitud contiene una combinación incompatible, se muestra una explicación específica en lugar de indicar que el registro desapareció.
+
+## Flujo centrado en el paciente
+
+1. En **Mascotas y tutores**, abre el detalle del paciente y pulsa **Abrir ficha clínica**. La cabecera muestra identidad, tutor, edad, peso y alertas accesibles. Las secciones permiten consultar antecedentes, historia, consultas, mediciones, diagnósticos, tratamientos, exámenes, vacunas y documentos.
+2. **Iniciar consulta** precarga el paciente. Selecciona sede y registra el motivo; el profesional se obtiene de la sesión. También se puede iniciar desde una cita de la agenda.
+3. Completa las notas SOAP y el examen físico; añade mediciones, diagnósticos y prescripciones desde la misma consulta. Cada registro estructurado es su fuente de verdad; el texto libre lo complementa.
+4. Adjunta informes PDF o imágenes, registra consentimientos con evidencia y solicita exámenes. El laboratorio conserva muestra, resultado, interpretación y contacto documentado. Registrar un contacto no envía mensajes.
+5. **Guardar consulta** conserva el borrador. **Revisar y cerrar consulta** muestra el resumen y pide confirmar; exige motivo, evaluación y plan. Si está vinculada con una cita, actualiza su estado coordinadamente.
+6. Descarga historia de esa consulta, receta o indicaciones PDF. Para aclarar una historia cerrada, escribe el motivo y crea una corrección vinculada; el original sigue disponible para comparar.
+7. **Programar control** reutiliza citas. En **Agenda**, registra llegada, abre al paciente y gestiona la reserva. Un solape del responsable muestra un mensaje específico.
+
+Los cambios pendientes bloquean navegación y advierten al cerrar la pestaña. Las notas sobreviven a una renovación normal de sesión y a un error de red; un conflicto de versiones requiere revisar y recargar explícitamente. No hay guardado automático ni almacenamiento clínico en localStorage. Guardar antes de cerrar el navegador.
+
+La historia tiene filtros y paginación; los puntos de la gráfica de peso son mediciones reales cargadas. Una sección sin permiso se distingue de una sección sin registros. Los diagnósticos y tratamientos se presentan como históricos hasta disponer de estados clínicos explícitos.
+
+Implementación en `src/features/clinical`: `PatientChart`, `Consultation`, `ClinicalFiles`, `ClinicalConsents`, `ClinicalLaboratory`, `Agenda`, `WeightHistory` y el guardado de navegación compartido. Se reutilizan `RecordEditor`, el catálogo de recursos, el editor documental y los controles visuales existentes. No se añadió un framework de UI.
+
+Consulta la [especificación y matriz de estado](../document-management/specs/002-flujo-clinico/spec.md) y los [contratos y migraciones del backend](../superkanes_backend/README.md#consulta-veterinaria-integrada). Las migraciones deben estar aplicadas antes de usar estas pantallas. Los botones dependen de los permisos del catálogo; la API vuelve a autorizar cada operación.
+
+La prueba `test/patient-chart-browser.cjs` usa una API y PostgreSQL efímeros con datos sintéticos. Cubre consulta, medición, renovación de sesión con notas pendientes, reintento tras pérdida de respuesta, adjunto, consentimiento, laboratorio, cierre, PDF, corrección y ancho móvil. Se ejecuta desde la suite CRUD del backend. El build conserva un aviso de tamaño del paquete principal; queda pendiente dividir la carga del editor para optimizar el arranque.

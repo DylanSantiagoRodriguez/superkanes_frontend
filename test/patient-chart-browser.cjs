@@ -1,15 +1,24 @@
 const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
-module.exports = async function chartBrowser({base,adminToken,user}) {
+module.exports = async function chartBrowser({base,adminToken,renewedToken,user}) {
   const browser=await chromium.launch({headless:true});
   const page=await browser.newPage({viewport:{width:1440,height:1000}});
-  let loseNextSave=false;
+  let loseNextSave=false, refreshCount=0;
+  // Trigger the actual session renewal callback deterministically while typing.
+  await page.addInitScript(() => {
+    const original=window.setTimeout.bind(window);
+    window.setTimeout=(handler,delay,...args)=>{
+      const id=original(handler,delay,...args);
+      if(delay===3540000 && typeof handler==='function')window.addEventListener('test:renew-session',()=>{window.clearTimeout(id);handler(...args)},{once:true});
+      return id;
+    };
+  });
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   const origin=process.env.TEST_FRONTEND_URL || 'http://localhost:5174';
   await page.route('**/api/v1/**',async route=>{
     const url=new URL(route.request().url());
     const cors={'access-control-allow-origin':origin,'access-control-allow-credentials':'true'};
-    if(url.pathname==='/api/v1/auth/refresh')return route.fulfill({json:{accessToken:adminToken,userId:user,expiresIn:3600},headers:cors});
+    if(url.pathname==='/api/v1/auth/refresh')return route.fulfill({json:{accessToken:++refreshCount===1?adminToken:renewedToken,userId:user,expiresIn:3600},headers:cors});
     if(route.request().method()==='OPTIONS')return route.fulfill({status:204,headers:{...cors,'access-control-allow-headers':'*','access-control-allow-methods':'GET,POST,PATCH,DELETE,OPTIONS'}});
     const response=await route.fetch({url:base+url.pathname+url.search});
     if(loseNextSave && url.pathname.endsWith('/guardar')){loseNextSave=false;return route.abort('failed')}
@@ -41,10 +50,17 @@ module.exports = async function chartBrowser({base,adminToken,user}) {
     await consultation.locator('textarea[name="evaluacion"]').fill('Evaluación de prueba');
     await consultation.locator('textarea[name="plan"]').fill('Control y recomendaciones de prueba');
     assert.equal(await chart.getByRole('button',{name:'Volver a la historia',exact:true}).isDisabled(),true);
+    const renewedRequest=page.waitForResponse(response=>response.url().includes('/resources/revision_clinica?')&&response.request().headers().authorization===`Bearer ${renewedToken}`);
+    await page.evaluate(()=>window.dispatchEvent(new Event('test:renew-session')));
+    await renewedRequest;
+    await page.waitForLoadState('networkidle');
+    assert.equal(refreshCount,2);
+    assert.equal(await consultation.locator('textarea[name="plan"]').inputValue(),'Control y recomendaciones de prueba');
     await consultation.getByRole('button',{name:'Añadir medición',exact:true}).click();
     await page.locator('#field-valor').fill('13.2');
     await page.getByRole('button',{name:'Guardar',exact:true}).click();
     await consultation.getByText('Peso: 13.200 kg',{exact:true}).waitFor();
+    await chart.getByText(/Último peso registrado: 13.200 kg/).waitFor();
     assert.equal(await consultation.locator('textarea[name="examen_fisico"]').inputValue(),'Examen objetivo registrado');
     await consultation.locator('textarea[name="plan"]').fill('Control y recomendaciones de prueba');
     loseNextSave=true;
@@ -66,6 +82,9 @@ module.exports = async function chartBrowser({base,adminToken,user}) {
     await laboratory.getByLabel('Laboratorio',{exact:true}).selectOption({index:1});
     await laboratory.getByLabel('Exámenes solicitados',{exact:true}).fill('Examen solicitado desde consulta');
     await laboratory.getByLabel('Indicación clínica',{exact:true}).fill('Indicación de prueba');
+    await chart.getByRole('button',{name:'Resumen',exact:true}).click();
+    await laboratory.getByText('Guarda o cancela el formulario de laboratorio antes de salir.',{exact:true}).waitFor();
+    assert.equal(await laboratory.getByLabel('Exámenes solicitados',{exact:true}).inputValue(),'Examen solicitado desde consulta');
     await laboratory.getByRole('button',{name:'Guardar laboratorio',exact:true}).click();
     await laboratory.getByRole('button',{name:'Registrar muestra',exact:true}).click();
     await laboratory.getByLabel('Identificación y tipo de muestra',{exact:true}).fill('Muestra identificada');
@@ -120,5 +139,5 @@ module.exports = async function chartBrowser({base,adminToken,user}) {
     await page.screenshot({path:'/tmp/superkanes-patient-mobile.png',fullPage:true});
     assert.deepEqual(errors,[]);
     console.log('OK: Chromium: ficha, SOAP, medición, cierre, corrección preservada y vista móvil.');
-  } catch(error) { await page.screenshot({path:'/tmp/superkanes-workflow-failure.png',fullPage:true}); throw error; } finally {await browser.close();}
+  } catch(error) { await page.screenshot({path:'/tmp/superkanes-workflow-failure.png',fullPage:true}); throw error; } finally {await page.unrouteAll({behavior:'wait'}); await browser.close();}
 };

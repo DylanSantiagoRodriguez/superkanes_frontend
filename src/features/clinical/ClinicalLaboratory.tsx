@@ -1,3 +1,4 @@
+import { useUnsavedGuard } from './use-unsaved-guard'
 import { useEffect, useRef, useState } from 'react'
 import type { Api, Row } from '../workspace/model'
 import { errorMessage } from '../../shared/api/http'
@@ -36,6 +37,13 @@ export function ClinicalLaboratory({
     [values, setValues] = useState<Record<string, string>>({})
   const pending = useRef(false),
     submission = useRef<{ signature: string; key: string } | null>(null)
+  useUnsavedGuard(
+    selected !== null && Object.values(values).some((value) => value.trim()),
+    () =>
+      setProblem(
+        'Guarda o cancela el formulario de laboratorio antes de salir.'
+      )
+  )
   useEffect(() => {
     let live = true
     api
@@ -173,7 +181,7 @@ export function ClinicalLaboratory({
             <div>
               {row.estado === 'solicitada' && (
                 <button
-                  disabled={disabled || busy}
+                  disabled={disabled || busy || selected !== null}
                   onClick={() => begin(row, 'muestra')}
                 >
                   Registrar muestra
@@ -181,7 +189,7 @@ export function ClinicalLaboratory({
               )}
               {row.estado === 'muestra_tomada' && (
                 <button
-                  disabled={disabled || busy}
+                  disabled={disabled || busy || selected !== null}
                   onClick={() => begin(row, 'procesar')}
                 >
                   Registrar procesamiento
@@ -194,7 +202,7 @@ export function ClinicalLaboratory({
                 'comunicada'
               ].includes(String(row.estado)) && (
                 <button
-                  disabled={disabled || busy}
+                  disabled={disabled || busy || selected !== null}
                   onClick={() => begin(row, 'resultado')}
                 >
                   {row.estado === 'en_proceso'
@@ -204,7 +212,7 @@ export function ClinicalLaboratory({
               )}
               {row.estado === 'resultado_disponible' && (
                 <button
-                  disabled={disabled || busy}
+                  disabled={disabled || busy || selected !== null}
                   onClick={() => begin(row, 'revisar')}
                 >
                   Registrar interpretación
@@ -212,7 +220,7 @@ export function ClinicalLaboratory({
               )}
               {row.estado === 'revisada' && (
                 <button
-                  disabled={disabled || busy}
+                  disabled={disabled || busy || selected !== null}
                   onClick={() => begin(row, 'comunicar')}
                 >
                   Documentar comunicación
@@ -222,7 +230,7 @@ export function ClinicalLaboratory({
                 String(row.estado)
               ) && (
                 <button
-                  disabled={disabled || busy}
+                  disabled={disabled || busy || selected !== null}
                   onClick={() => begin(row, 'cancelar')}
                 >
                   Cancelar orden con motivo
@@ -263,7 +271,7 @@ export function ClinicalLaboratory({
       )}
       {permissions?.create && (
         <button
-          disabled={disabled || busy}
+          disabled={disabled || busy || selected !== null}
           onClick={() => {
             setSelected('new')
             setValues({})
@@ -311,6 +319,7 @@ export function ClinicalLaboratory({
                 <label>
                   Exámenes solicitados
                   <textarea
+                    aria-label="Exámenes solicitados"
                     required
                     maxLength={4000}
                     value={values.pruebas ?? ''}
@@ -322,6 +331,7 @@ export function ClinicalLaboratory({
                 <label>
                   Indicación clínica
                   <textarea
+                    aria-label="Indicación clínica"
                     maxLength={20000}
                     value={values.indicacion ?? ''}
                     onChange={(e) =>

@@ -1,3 +1,4 @@
+import { canNavigate } from './use-unsaved-guard'
 import { WeightHistory } from './WeightHistory'
 import { downloadClinical } from './clinical-files-api'
 import { useEffect, useState } from 'react'
@@ -93,7 +94,12 @@ export function PatientChart({
   const patient = summary?.patient
   return (
     <article className={styles.chart} aria-label="Ficha clínica del paciente">
-      <button disabled={dirty} onClick={onBack}>
+      <button
+        disabled={dirty}
+        onClick={() => {
+          if (canNavigate()) onBack()
+        }}
+      >
         ← Volver a pacientes
       </button>
       {problem && (
@@ -152,18 +158,28 @@ export function PatientChart({
                 patient!.estado === 'activa' && (
                   <button
                     className={styles.primary}
-                    onClick={() => setCreating('atencion_clinica')}
+                    onClick={() => {
+                      if (canNavigate()) setCreating('atencion_clinica')
+                    }}
                   >
                     Iniciar consulta
                   </button>
                 )}
               {contract('cita')?.permissions.create && (
-                <button onClick={() => setCreating('cita')}>
+                <button
+                  onClick={() => {
+                    if (canNavigate()) setCreating('cita')
+                  }}
+                >
                   Programar control
                 </button>
               )}
               {contract('alerta_mascota')?.permissions.create && (
-                <button onClick={() => setCreating('alerta_mascota')}>
+                <button
+                  onClick={() => {
+                    if (canNavigate()) setCreating('alerta_mascota')
+                  }}
+                >
                   Registrar alerta
                 </button>
               )}
@@ -209,6 +225,7 @@ export function PatientChart({
                 key={id}
                 aria-current={section === id ? 'page' : undefined}
                 onClick={() => {
+                  if (!canNavigate()) return
                   setSection(id)
                   setAttention(null)
                 }}
@@ -221,7 +238,12 @@ export function PatientChart({
             <Panel
               title="Consulta seleccionada"
               action={
-                <button disabled={dirty} onClick={() => setAttention(null)}>
+                <button
+                  disabled={dirty}
+                  onClick={() => {
+                    if (canNavigate()) setAttention(null)
+                  }}
+                >
                   Volver a la historia
                 </button>
               }
@@ -232,6 +254,7 @@ export function PatientChart({
                 attention={attention}
                 catalog={catalog}
                 onDirty={setDirty}
+                onSaved={() => setRefresh((value) => value + 1)}
               />
             </Panel>
           ) : section === 'resumen' ? (

@@ -15,7 +15,7 @@ function inputValue(field: Field, value: unknown): string {
     const date = new Date(String(value))
     return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
       .toISOString()
-      .slice(0, 16)
+      .slice(0, field.name === 'medida_en' ? 23 : 16)
   }
   return String(value)
 }
@@ -472,7 +472,7 @@ export function RecordEditor({
                               : 'text'
                     }
                     maxLength={20000}
-                    step={field.type === 'integer' ? 1 : undefined}
+                    step={field.type === 'integer' ? 1 : field.name === 'medida_en' ? '0.001' : undefined}
                     inputMode={
                       field.type.startsWith('numeric') ||
                       field.type === 'bigint'

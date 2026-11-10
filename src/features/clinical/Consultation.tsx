@@ -1,8 +1,9 @@
+import { useUnsavedGuard } from './use-unsaved-guard'
 import { ClinicalLaboratory } from './ClinicalLaboratory'
 import { ClinicalConsents } from './ClinicalConsents'
 import { ClinicalFiles } from './ClinicalFiles'
 import { downloadClinical } from './clinical-files-api'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { JSONContent } from '@tiptap/react'
 import { ApiError, errorMessage } from '../../shared/api/http'
 import { RecordEditor } from '../workspace/RecordEditor'
@@ -32,12 +33,14 @@ export function Consultation({
   api,
   attention,
   catalog,
-  onDirty
+  onDirty,
+  onSaved
 }: {
   api: Api
   attention: Row
   catalog: Resource[]
   onDirty: (dirty: boolean) => void
+  onSaved: () => void
 }) {
   const [revisions, setRevisions] = useState<Row[]>([]),
     [chosen, setChosen] = useState('')
@@ -78,19 +81,10 @@ export function Consultation({
     onDirty(dirty)
     return () => onDirty(false)
   }, [dirty, onDirty])
-  useEffect(() => {
-    if (!dirty) return
-    const warn = (event: BeforeUnloadEvent) => {
-      event.preventDefault()
-      event.returnValue = ''
-    }
-    const block = (event: Event) => event.preventDefault()
-    window.addEventListener('beforeunload', warn)
-    document.addEventListener('superkanes:before-navigation', block)
-    return () => {
-      window.removeEventListener('beforeunload', warn)
-      document.removeEventListener('superkanes:before-navigation', block)
-    }
+  useUnsavedGuard(dirty)
+  const dirtyRef = useRef(dirty)
+  useLayoutEffect(() => {
+    dirtyRef.current = dirty
   }, [dirty])
   useEffect(() => {
     let active = true
@@ -119,11 +113,11 @@ export function Consultation({
   }, [api, attention.id, refresh])
   useEffect(() => {
     let active = true
-    if (!chosen) return
+    if (!chosen || dirtyRef.current) return
     api
       .revisionDetails(chosen)
       .then((result) => {
-        if (active) {
+        if (active && !dirtyRef.current) {
           setProblem('')
           setConflict(false)
           setPrevious(null)
@@ -190,6 +184,7 @@ export function Consultation({
         )
         setConfirmClose(false)
         setRefresh((v) => v + 1)
+        onSaved()
       }
       return result.details
     } catch (cause) {
@@ -295,7 +290,19 @@ export function Consultation({
         <p>
           Conserva tus notas antes de recargar. No se sobrescribirán cambios de
           otro usuario.{' '}
-          <button onClick={() => setRefresh((v) => v + 1)}>
+          <button
+            onClick={() => {
+              setValues(
+                Object.fromEntries(
+                  narrativeFields.map(([key]) => [
+                    key,
+                    String(revision![key] ?? '')
+                  ])
+                )
+              )
+              setRefresh((v) => v + 1)
+            }}
+          >
             Recargar revisión y descartar cambios locales
           </button>
         </p>

@@ -85,5 +85,5 @@ module.exports = async function clinicalBrowser({ base, adminToken, user, org, r
     assert.match(JSON.stringify(histories[0].documento), /Paciente estable desde la atención/);
     assert.deepEqual(errors, []);
     console.log('OK: Chromium: foto real con nombre, descarte de cambios, documento extenso, edición, guardado y reapertura.');
-  } catch (error) { await page.screenshot({path:'/tmp/superkanes-browser-failure.png'}); throw error; } finally { await browser.close(); }
+  } catch (error) { await page.screenshot({path:'/tmp/superkanes-browser-failure.png'}); throw error; } finally { await page.unrouteAll({behavior:'wait'}); await browser.close(); }
 };

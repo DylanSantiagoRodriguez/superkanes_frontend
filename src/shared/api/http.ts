@@ -27,10 +27,15 @@ export async function requestJson(
     credentials: 'include',
     cache: 'no-store',
     signal: options.signal
-      ? AbortSignal.any([options.signal, AbortSignal.timeout(options.body instanceof FormData ? 60000 : 15000)])
+      ? AbortSignal.any([
+          options.signal,
+          AbortSignal.timeout(options.body instanceof FormData ? 60000 : 15000)
+        ])
       : AbortSignal.timeout(options.body instanceof FormData ? 60000 : 15000),
     headers: {
-      ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
+      ...(options.body instanceof FormData
+        ? {}
+        : { 'Content-Type': 'application/json' }),
       'X-CSRF-Protection': '1',
       ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
       ...(options.organization
@@ -39,12 +44,23 @@ export async function requestJson(
       ...options.headers
     },
     ...(options.body !== undefined
-      ? { body: options.body instanceof FormData ? options.body : JSON.stringify(options.body) }
+      ? {
+          body:
+            options.body instanceof FormData
+              ? options.body
+              : JSON.stringify(options.body)
+        }
       : {})
   })
   if (!response.ok) {
     const body: unknown = await response.json().catch(() => null)
-    const code = body && typeof body === 'object' && 'code' in body && typeof body.code === 'string' ? body.code : undefined
+    const code =
+      body &&
+      typeof body === 'object' &&
+      'code' in body &&
+      typeof body.code === 'string'
+        ? body.code
+        : undefined
     throw new ApiError(response.status, code)
   }
   if (options.responseType === 'blob') return response.blob()
@@ -59,6 +75,8 @@ export function postJson(
 }
 export function errorMessage(error: unknown): string {
   if (error instanceof ApiError) {
+    if (error.code === 'APPOINTMENT_OVERLAP')
+      return 'El responsable ya tiene una cita en ese horario. Selecciona otro horario o responsable.'
     if (error.code === 'BREED_SPECIES_MISMATCH')
       return 'La raza seleccionada no corresponde a la especie. Selecciona una raza de esa especie o deja el campo Raza vacío.'
     const messages: Record<number, string> = {
