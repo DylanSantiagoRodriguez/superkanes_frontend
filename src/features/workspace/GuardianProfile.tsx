@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { AppIcon } from '../../shared/ui/AppIcon'
 import type { ReactNode } from 'react'
 import { ApiError, errorMessage } from '../../shared/api/http'
 import { RecordDetails } from './RecordDetails'
@@ -117,29 +118,63 @@ export function GuardianProfile({
     <article className={styles.chart} aria-label="Perfil del tutor">
       <button onClick={onBack}>← Volver a tutores</button>
       <header className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>PERFIL DEL TUTOR</p>
-          <h2>{rowLabel(guardian)}</h2>
-          <p>{guardian.activo ? 'Activo' : 'Inactivo'}</p>
+        <div className={styles.identity}>
+          <div className={styles.guardianAvatar} aria-hidden="true">
+            {[guardian.nombres, guardian.apellidos]
+              .map((value) =>
+                String(value ?? '')
+                  .trim()
+                  .charAt(0)
+              )
+              .join('')
+              .toLocaleUpperCase() || 'T'}
+          </div>
+          <div className={styles.identityText}>
+            <p className={styles.eyebrow}>PERFIL DEL TUTOR</p>
+            <h2>{rowLabel(guardian)}</h2>
+            <div className={styles.chips}>
+              <span className={styles.statusChip}>
+                {guardian.activo ? 'Activo' : 'Inactivo'}
+              </span>
+            </div>
+          </div>
         </div>
-        <div className={styles.actions}>{actions}</div>
+        <div className={styles.profileActions}>{actions}</div>
       </header>
       <div className={styles.profileColumns}>
         <section className={styles.profileCard}>
-          <h3>Datos del tutor</h3>
+          <h3 className={styles.sectionTitle}>
+            <AppIcon name="guardian" />
+            Datos del tutor
+          </h3>
           <RecordDetails api={api} resource={resource} row={guardian} />
-          <h3>Teléfonos</h3>
+          <h3 className={styles.sectionTitle}>
+            <AppIcon name="phone" />
+            Teléfonos
+          </h3>
           {!catalog.some((r) => r.name === 'telefono_tutor') ? (
             <p>Sin permiso para consultar teléfonos.</p>
           ) : phones.length ? (
-            phones.map((phone) => <p key={phone.id}>{String(phone.numero)}</p>)
+            phones.map((phone) => (
+              <p className={styles.phone} key={phone.id}>
+                {String(phone.numero)}
+              </p>
+            ))
           ) : (
             <p>{busy ? 'Consultando…' : 'No hay teléfonos registrados.'}</p>
           )}
         </section>
         <section className={styles.profileCard} aria-label="Mascotas del tutor">
           <div className={styles.entryHeader}>
-            <h3>Mascotas asociadas</h3>
+            <div>
+              <h3 className={styles.sectionTitle}>
+                <AppIcon name="pets" />
+                Mascotas asociadas
+              </h3>
+              <p className={styles.sectionHint}>
+                Sus compañeros, en un solo lugar.
+              </p>
+            </div>
             {petResource?.permissions.create && (
               <button onClick={() => setCreating(true)}>
                 Nueva mascota de este tutor
@@ -176,14 +211,17 @@ export function GuardianProfile({
                       id={String(pet.foto_archivo_id ?? '')}
                       name={String(pet.nombre)}
                     />
-                    <p>
-                      {String(pet.codigo)} · {String(pet.estado)}
-                    </p>
+                    <div className={styles.petMeta}>
+                      <span>{String(pet.codigo)}</span>
+                      <span className={styles.statusChip}>
+                        {String(pet.estado)}
+                      </span>
+                    </div>
                   </>
                 ) : (
                   <h4>Mascota no disponible</h4>
                 )}
-                <p>
+                <p className={styles.relationship}>
                   {link.vigente_hasta
                     ? 'Vínculo finalizado'
                     : link.es_principal
@@ -197,8 +235,9 @@ export function GuardianProfile({
                     : ''}
                 </p>
                 {pet && (
-                  <button onClick={() => onPet(pet)}>
-                    Ver perfil de {String(pet.nombre)}
+                  <button className={styles.petLink} onClick={() => onPet(pet)}>
+                    <span>Ver perfil de {String(pet.nombre)}</span>
+                    <span aria-hidden="true">↗</span>
                   </button>
                 )}
               </article>

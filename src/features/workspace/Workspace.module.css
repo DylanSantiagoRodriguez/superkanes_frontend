@@ -201,8 +201,10 @@
   overflow-wrap: anywhere;
 }
 .notice {
-  color: var(--color-warning);
-  background: var(--color-warning-bg);
+  color: var(--color-muted);
+  background: var(--surface-page);
+  padding: 10px 14px;
+  line-height: 1.6;
 }
 .success {
   color: var(--color-success);
@@ -367,7 +369,7 @@
 .formGrid label { font-weight: 550; color: var(--color-text); }
 .formGrid input:focus, .formGrid select:focus, .formGrid textarea:focus, .toolbar input:focus, .toolbar select:focus, .resourceSelect select:focus { border-color: var(--color-primary); }
 .formGrid input:disabled, .formGrid select:disabled, .formGrid textarea:disabled { background: var(--surface-disabled); color: var(--color-muted); }
-.notice { border: 1px solid var(--color-warning-border); }
+.notice { border: 0; border-left: 3px solid var(--color-primary-border); }
 .success { border: 1px solid var(--color-success-border); }
 .error { border: 1px solid var(--color-danger-border); }
 .patientPhoto img { border-color: var(--color-border); }

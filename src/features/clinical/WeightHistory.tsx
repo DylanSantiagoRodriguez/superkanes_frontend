@@ -1,4 +1,5 @@
 import type { Row } from '../workspace/model'
+import styles from './PatientChart.module.css'
 export function WeightHistory({ rows }: { rows: Row[] }) {
   const points = [
     ...new Map(
@@ -23,17 +24,15 @@ export function WeightHistory({ rows }: { rows: Row[] }) {
   const first = Date.parse(String(points[0].medida_en)),
     duration = Date.parse(String(points.at(-1)!.medida_en)) - first || 1
   return (
-    <figure style={{ margin: '20px 0' }}>
-      <figcaption>
-        Evolución del peso · observaciones de los registros cargados
-      </figcaption>
+    <figure className={styles.weightFigure}>
+      <figcaption>Mediciones registradas</figcaption>
       <p>
         <strong>
           {Number(points.at(-1)!.valor).toLocaleString('es-CO')} kg
         </strong>
         {points.length > 1
-          ? ` · Cambio: ${(Number(points.at(-1)!.valor) - Number(points.at(-2)!.valor)).toLocaleString('es-CO', { maximumFractionDigits: 3, signDisplay: 'always' })} kg respecto al pesaje anterior`
-          : ' · Primer pesaje registrado'}
+          ? `Cambio: ${(Number(points.at(-1)!.valor) - Number(points.at(-2)!.valor)).toLocaleString('es-CO', { maximumFractionDigits: 3, signDisplay: 'always' })} kg respecto al pesaje anterior`
+          : 'Primer pesaje registrado'}
       </p>
       <svg
         viewBox="0 0 360 210"

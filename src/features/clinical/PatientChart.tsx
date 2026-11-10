@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { AppIcon } from '../../shared/ui/AppIcon'
 import { RecordDetails } from '../workspace/RecordDetails'
 import { PatientWeightPanel } from './PatientWeightPanel'
 import { PatientDocuments } from './PatientDocuments'
@@ -127,47 +128,64 @@ export function PatientChart({
         !problem && <p role="status">Cargando ficha clínica…</p>
       ) : (
         <>
-          <header className={styles.header}>
-            <PatientPhoto
-              api={api}
-              id={String(patient!.foto_archivo_id ?? '')}
-              name={String(patient!.nombre)}
-            />
-            <div>
-              <p className={styles.eyebrow}>
-                FICHA CLÍNICA · {String(patient!.codigo)}
-              </p>
-              <h2>{String(patient!.nombre)}</h2>
-              <p>
-                {String(summary.species?.nombre ?? 'Especie no disponible')} ·{' '}
-                {String(
-                  summary.breed?.nombre ?? 'Raza no registrada o no disponible'
-                )}{' '}
-                · {String(patient!.sexo)}
-              </p>
-              <p>
-                {age(patient!.fecha_nacimiento)}
-                {patient!.nacimiento_estimado ? ' (estimada)' : ''} ·{' '}
-                {String(patient!.estado)}
-              </p>
-              <p>
-                Tutor principal:{' '}
-                {summary.guardian
-                  ? rowLabel(summary.guardian)
-                  : 'No disponible'}
-              </p>
-              <p>
-                Último peso registrado:{' '}
-                {summary.overview.peso === null
-                  ? 'Sin acceso'
-                  : summary.overview.peso?.data[0]
-                    ? `${summary.overview.peso.data[0].valor} kg · ${date(summary.overview.peso.data[0].fecha)}`
-                    : 'Sin mediciones'}
-              </p>
+          <header className={`${styles.header} ${styles.patientHeader}`}>
+            <div className={styles.identity}>
+              <PatientPhoto
+                api={api}
+                id={String(patient!.foto_archivo_id ?? '')}
+                name={String(patient!.nombre)}
+              />
+              <div className={styles.identityText}>
+                <p className={styles.eyebrow}>
+                  FICHA CLÍNICA · {String(patient!.codigo)}
+                </p>
+                <h2>{String(patient!.nombre)}</h2>
+                <p>
+                  {String(summary.species?.nombre ?? 'Especie no disponible')} ·{' '}
+                  {String(
+                    summary.breed?.nombre ??
+                      'Raza no registrada o no disponible'
+                  )}{' '}
+                  · {String(patient!.sexo)}
+                </p>
+                <div className={styles.chips}>
+                  <span className={styles.statusChip}>
+                    {String(patient!.estado)}
+                  </span>
+                  <span>
+                    {age(patient!.fecha_nacimiento)}
+                    {patient!.nacimiento_estimado ? ' (estimada)' : ''}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className={styles.actions}>
-              {contract('mascota')?.permissions.update && <button onClick={() => { if(canNavigate()) setEditingPatient(true) }}>Editar</button>}
-              {profileActions && <fieldset className={styles.profileActionGroup} disabled={dirty}>{profileActions}</fieldset>}
+            <div className={styles.profileFacts}>
+              <div>
+                <AppIcon name="guardian" />
+                <p>
+                  <span>Tutor principal: </span>
+                  <strong>
+                    {summary.guardian
+                      ? rowLabel(summary.guardian)
+                      : 'No disponible'}
+                  </strong>
+                </p>
+              </div>
+              <div>
+                <AppIcon name="weight" />
+                <p>
+                  <span>Último peso registrado: </span>
+                  <strong>
+                    {summary.overview.peso === null
+                      ? 'Sin acceso'
+                      : summary.overview.peso?.data[0]
+                        ? `${summary.overview.peso.data[0].valor} kg · ${date(summary.overview.peso.data[0].fecha)}`
+                        : 'Sin mediciones'}
+                  </strong>
+                </p>
+              </div>
+            </div>
+            <div className={styles.profileActions}>
               {contract('atencion_clinica')?.permissions.create &&
                 contract('revision_clinica')?.permissions.create &&
                 patient!.estado === 'activa' && (
@@ -198,36 +216,83 @@ export function PatientChart({
                   Registrar alerta
                 </button>
               )}
+              {contract('mascota')?.permissions.update && (
+                <button
+                  onClick={() => {
+                    if (canNavigate()) setEditingPatient(true)
+                  }}
+                >
+                  Editar
+                </button>
+              )}
+              {profileActions && (
+                <fieldset
+                  className={styles.profileActionGroup}
+                  disabled={dirty}
+                >
+                  {profileActions}
+                </fieldset>
+              )}
             </div>
           </header>
-          <details className={styles.profileCard}><summary>Datos completos del paciente</summary>{contract('mascota')&&<RecordDetails api={api} resource={contract('mascota')!} row={patient!}/>}</details>
-          <section className={styles.alerts} aria-label="Alertas clínicas">
-            <strong>Alertas y antecedentes relevantes</strong>
+          <details className={`${styles.profileCard} ${styles.patientDetails}`}>
+            <summary>
+              Datos completos del paciente
+              <span>Identificación y datos generales</span>
+            </summary>
+            {contract('mascota') && (
+              <RecordDetails
+                api={api}
+                resource={contract('mascota')!}
+                row={patient!}
+              />
+            )}
+          </details>
+          <section
+            className={
+              summary.overview.alertas?.data.length
+                ? styles.alerts
+                : styles.alertStatus
+            }
+            aria-label="Alertas clínicas"
+          >
+            <div className={styles.alertHeading}>
+              <AppIcon name="clinical" size={18} />
+              <strong>Antecedentes y alertas</strong>
+            </div>
             {summary.overview.alertas === null ? (
               <p>
-                No tienes acceso a las alertas. No se puede confirmar su
-                ausencia.
+                Sin acceso a las alertas; no se puede confirmar su ausencia.
               </p>
             ) : summary.overview.alertas?.data.length ? (
               <>
-                {summary.overview.alertas.data.map((row) => (
-                  <p key={row.id}>
-                    <strong>
-                      {String(row.severidad)} · {String(row.tipo)}:
-                    </strong>{' '}
-                    {String(row.descripcion)}
-                  </p>
-                ))}
+                <ul className={styles.alertList}>
+                  {summary.overview.alertas.data.map((row) => (
+                    <li key={row.id} data-severity={String(row.severidad)}>
+                      <span className={styles.severity}>
+                        {String(row.severidad)}
+                      </span>
+                      <p>
+                        <strong>{String(row.tipo)}: </strong>
+                        {String(row.descripcion)}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
                 {summary.overview.alertas.page.next && (
-                  <button onClick={() => setSection('alertas')}>
+                  <button
+                    disabled={dirty}
+                    onClick={() => {
+                      if (canNavigate()) setSection('alertas')
+                    }}
+                  >
                     Ver todas las alertas
                   </button>
                 )}
               </>
             ) : (
               <p>
-                No hay alertas registradas. Confirma los antecedentes durante la
-                consulta.
+                Sin alertas registradas. Verifica los antecedentes en consulta.
               </p>
             )}
           </section>
@@ -250,48 +315,84 @@ export function PatientChart({
               </button>
             ))}
           </nav>
-          <div className={styles.patientColumns}><div className={styles.profileMain}>
-          {attention ? (
-            <Panel
-              title="Consulta seleccionada"
-              action={
-                <button
-                  disabled={dirty}
-                  onClick={() => {
-                    if (canNavigate()) setAttention(null)
-                  }}
+          <div className={styles.patientColumns}>
+            <div className={styles.profileMain}>
+              {attention ? (
+                <Panel
+                  title="Consulta seleccionada"
+                  action={
+                    <button
+                      disabled={dirty}
+                      onClick={() => {
+                        if (canNavigate()) setAttention(null)
+                      }}
+                    >
+                      Volver a la historia
+                    </button>
+                  }
                 >
-                  Volver a la historia
-                </button>
-              }
-            >
-              <Consultation
-                key={attention.id}
+                  <Consultation
+                    key={attention.id}
+                    api={api}
+                    attention={attention}
+                    catalog={catalog}
+                    onDirty={setDirty}
+                    onSaved={() => setRefresh((value) => value + 1)}
+                  />
+                </Panel>
+              ) : section === 'documentos_editor' ? (
+                <PatientDocuments
+                  key={patientId}
+                  api={api}
+                  patientId={patientId}
+                />
+              ) : section === 'resumen' ? (
+                <section aria-label="Historial de actividad del paciente">
+                  <h3>Historial de citas y atenciones</h3>
+                  <PatientRecords
+                    key={`history:${refresh}`}
+                    api={api}
+                    patientId={patientId}
+                    section="historia"
+                    onAttention={setAttention}
+                  />
+                </section>
+              ) : (
+                <PatientRecords
+                  key={`${section}:${refresh}`}
+                  api={api}
+                  patientId={patientId}
+                  section={section}
+                  onAttention={setAttention}
+                />
+              )}
+            </div>
+            <aside className={styles.profileAside}>
+              <PatientWeightPanel
                 api={api}
-                attention={attention}
+                patientId={patientId}
                 catalog={catalog}
-                onDirty={setDirty}
-                onSaved={() => setRefresh((value) => value + 1)}
+                refresh={refresh}
+                onSaved={() => setRefresh((n) => n + 1)}
+                appointment={initialAppointment}
               />
-            </Panel>
-          ) : section === 'documentos_editor' ? (
-            <PatientDocuments key={patientId} api={api} patientId={patientId} />
-          ) : section === 'resumen' ? (
-            <section aria-label="Historial de actividad del paciente">
-              <h3>Historial de citas y atenciones</h3>
-              <PatientRecords key={`history:${refresh}`} api={api} patientId={patientId} section="historia" onAttention={setAttention} />
-            </section>
-          ) : (
-            <PatientRecords
-              key={`${section}:${refresh}`}
+            </aside>
+          </div>
+          {editingPatient && contract('mascota') && (
+            <RecordEditor
               api={api}
-              patientId={patientId}
-              section={section}
-              onAttention={setAttention}
+              resource={contract('mascota')!}
+              catalog={catalog}
+              row={patient!}
+              title="Editar paciente"
+              onClose={() => setEditingPatient(false)}
+              onSaved={(saved) => {
+                setEditingPatient(false)
+                setRefresh((n) => n + 1)
+                onPatientUpdated?.(saved)
+              }}
             />
           )}
-          </div><aside className={styles.profileAside}><PatientWeightPanel api={api} patientId={patientId} catalog={catalog} refresh={refresh} onSaved={() => setRefresh(n=>n+1)} appointment={initialAppointment}/></aside></div>
-          {editingPatient&&contract('mascota')&&<RecordEditor api={api} resource={contract('mascota')!} catalog={catalog} row={patient!} title="Editar paciente" onClose={()=>setEditingPatient(false)} onSaved={saved=>{setEditingPatient(false);setRefresh(n=>n+1);onPatientUpdated?.(saved)}}/>}
           {creating && contract(creating) && (
             <RecordEditor
               api={api}
@@ -540,11 +641,23 @@ function PatientRecords({
             </div>
             <dl>
               {fields
-                .filter((key) => (row.registro as Row | undefined)?.[key] != null || row[key] != null)
+                .filter(
+                  (key) =>
+                    (row.registro as Row | undefined)?.[key] != null ||
+                    row[key] != null
+                )
                 .map((key) => (
                   <div key={key}>
                     <dt>{label(key)}</dt>
-                    <dd>{['inicio','fin'].includes(key) ? date((row.registro as Row | undefined)?.[key] ?? row[key]) : String((row.registro as Row | undefined)?.[key] ?? row[key])}</dd>
+                    <dd>
+                      {['inicio', 'fin'].includes(key)
+                        ? date(
+                            (row.registro as Row | undefined)?.[key] ?? row[key]
+                          )
+                        : String(
+                            (row.registro as Row | undefined)?.[key] ?? row[key]
+                          )}
+                    </dd>
                   </div>
                 ))}
             </dl>
