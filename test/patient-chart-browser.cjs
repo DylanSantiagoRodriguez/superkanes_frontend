@@ -3,6 +3,7 @@ const { chromium } = require('playwright');
 module.exports = async function chartBrowser({base,adminToken,user}) {
   const browser=await chromium.launch({headless:true});
   const page=await browser.newPage({viewport:{width:1440,height:1000}});
+  let loseNextSave=false;
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   const origin=process.env.TEST_FRONTEND_URL || 'http://localhost:5174';
   await page.route('**/api/v1/**',async route=>{
@@ -10,7 +11,9 @@ module.exports = async function chartBrowser({base,adminToken,user}) {
     const cors={'access-control-allow-origin':origin,'access-control-allow-credentials':'true'};
     if(url.pathname==='/api/v1/auth/refresh')return route.fulfill({json:{accessToken:adminToken,userId:user,expiresIn:3600},headers:cors});
     if(route.request().method()==='OPTIONS')return route.fulfill({status:204,headers:{...cors,'access-control-allow-headers':'*','access-control-allow-methods':'GET,POST,PATCH,DELETE,OPTIONS'}});
-    const response=await route.fetch({url:base+url.pathname+url.search});await route.fulfill({response,headers:{...response.headers(),...cors}});
+    const response=await route.fetch({url:base+url.pathname+url.search});
+    if(loseNextSave && url.pathname.endsWith('/guardar')){loseNextSave=false;return route.abort('failed')}
+    await route.fulfill({response,headers:{...response.headers(),...cors}});
   });
   try {
     await page.goto(origin);
@@ -27,11 +30,45 @@ module.exports = async function chartBrowser({base,adminToken,user}) {
     await chart.getByRole('button',{name:'Iniciar consulta',exact:true}).click();
     await page.getByRole('heading',{name:'Nueva consulta del paciente',exact:true}).waitFor();
     assert.ok(await page.locator('#field-mascota_id').inputValue());
-    await page.getByRole('button',{name:'Cerrar',exact:true}).click();
+
+    await page.locator('#field-sede_id option').nth(1).waitFor({state:'attached'});
+    await page.locator('#field-sede_id').selectOption({index:1});
+    await page.locator('#field-motivo_consulta').fill('Consulta integrada desde ficha');
+    await page.getByRole('button',{name:'Guardar atención e historia',exact:true}).click();
+    const consultation=chart.getByRole('region',{name:'Consulta integrada'});
+    await consultation.locator('textarea[name="anamnesis"]').fill('Antecedentes registrados en consulta');
+    await consultation.locator('textarea[name="examen_fisico"]').fill('Examen objetivo registrado');
+    await consultation.locator('textarea[name="evaluacion"]').fill('Evaluación de prueba');
+    await consultation.locator('textarea[name="plan"]').fill('Control y recomendaciones de prueba');
+    assert.equal(await chart.getByRole('button',{name:'Volver a la historia',exact:true}).isDisabled(),true);
+    await consultation.getByRole('button',{name:'Añadir medición',exact:true}).click();
+    await page.locator('#field-valor').fill('13.2');
+    await page.getByRole('button',{name:'Guardar',exact:true}).click();
+    await consultation.getByText('Peso: 13.200 kg',{exact:true}).waitFor();
+    assert.equal(await consultation.locator('textarea[name="examen_fisico"]').inputValue(),'Examen objetivo registrado');
+    await consultation.locator('textarea[name="plan"]').fill('Control y recomendaciones de prueba');
+    loseNextSave=true;
+    await consultation.getByRole('button',{name:'Guardar consulta',exact:true}).click();
+    await consultation.getByRole('alert').filter({hasText:'Comprueba tu conexión'}).waitFor();
+    assert.equal(await consultation.locator('textarea[name="plan"]').inputValue(),'Control y recomendaciones de prueba');
+    await consultation.getByRole('button',{name:'Guardar consulta',exact:true}).click();
+    await consultation.getByText('Consulta guardada.',{exact:true}).waitFor();
+    await consultation.getByRole('button',{name:'Revisar y cerrar consulta',exact:true}).click();
+    await consultation.getByRole('button',{name:'Confirmar cierre de consulta',exact:true}).click();
+    await consultation.getByText('Consulta cerrada. El original queda protegido.',{exact:true}).waitFor();
+    assert.equal(await consultation.locator('textarea[name="anamnesis"]').isDisabled(),true);
+    await consultation.getByLabel('Motivo de la corrección',{exact:true}).fill('Aclaración de seguimiento');
+    await consultation.getByRole('button',{name:'Crear corrección vinculada',exact:true}).click();
+    await consultation.locator('textarea[name="plan"]:enabled').waitFor();
+    await consultation.locator('textarea[name="plan"]').fill('Plan aclarado en nueva revisión');
+    await consultation.getByRole('button',{name:'Guardar consulta',exact:true}).click();
+    await consultation.getByText('Consulta guardada.',{exact:true}).waitFor();
+    await consultation.getByText('Comparar con la revisión anterior',{exact:true}).click();
+    await consultation.getByText('Anterior: Control y recomendaciones de prueba',{exact:true}).waitFor();
     await page.setViewportSize({width:390,height:844});
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1));
     await page.screenshot({path:'/tmp/superkanes-patient-mobile.png',fullPage:true});
     assert.deepEqual(errors,[]);
-    console.log('OK: Chromium: ficha, antecedentes, consulta contextual y vista móvil.');
-  } finally {await browser.close();}
+    console.log('OK: Chromium: ficha, SOAP, medición, cierre, corrección preservada y vista móvil.');
+  } catch(error) { await page.screenshot({path:'/tmp/superkanes-workflow-failure.png',fullPage:true}); throw error; } finally {await browser.close();}
 };

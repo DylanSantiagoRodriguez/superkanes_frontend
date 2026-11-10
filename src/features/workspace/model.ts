@@ -1,3 +1,4 @@
+import type { RevisionDetails } from '../clinical/Consultation'
 import type { PatientSummary } from '../clinical/PatientChart'
 import { requestJson } from '../../shared/api/http'
 export type Row = Record<string, unknown> & { id: string; version?: number }
@@ -205,6 +206,13 @@ const labels: Record<string, string> = {
   documento: 'Documento de historia clínica',
   foto_archivo_id: 'Foto del paciente',
   anamnesis: 'Anamnesis',
+  examen_fisico: 'Examen físico',
+  numero_revision: 'Revisión de origen',
+  estado_revision: 'Estado de la revisión',
+  peso: 'Peso',
+  temperatura: 'Temperatura',
+  frecuencia_cardiaca: 'Frecuencia cardíaca',
+  frecuencia_respiratoria: 'Frecuencia respiratoria',
   evaluacion: 'Evaluación',
   plan: 'Plan de tratamiento',
   datos_estructurados: 'Contenido del formulario',
@@ -283,6 +291,9 @@ export function createApi(
   const base = (resource: string) =>
     `/resources/${encodeURIComponent(resource)}`
   return {
+    revisionDetails: async (id: string) => ((await request(`/resources/clinica/revisiones/${encodeURIComponent(id)}`)) as { data: RevisionDetails }).data,
+    saveClinical: async (row: Row, body: Record<string, unknown>, key: string) => ((await request(`/resources/clinica/revisiones/${encodeURIComponent(row.id)}/guardar`, { method: 'POST', body, headers: { 'Idempotency-Key': key, 'If-Match': `"${row.version}"` } })) as { data: { revision: Row; details: Row[] } }).data,
+    correctClinical: async (row: Row, reason: string, key: string) => ((await request(`/resources/clinica/revisiones/${encodeURIComponent(row.id)}/corregir`, { method: 'POST', body: { motivo_cambio: reason }, headers: { 'Idempotency-Key': key, 'If-Match': `"${row.version}"` } })) as { data: { revision: Row } }).data.revision,
     patientSummary: async (id: string, signal?: AbortSignal) => ((await request(`/resources/clinica/pacientes/${encodeURIComponent(id)}`, { signal })) as { data: PatientSummary }).data,
     patientRecords: async (id: string, section: string, query: Record<string, string> = {}, signal?: AbortSignal) => {
       const params = new URLSearchParams(Object.entries(query).filter(([, value]) => value))

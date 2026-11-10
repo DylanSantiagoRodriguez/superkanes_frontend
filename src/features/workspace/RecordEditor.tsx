@@ -61,7 +61,7 @@ export function RecordEditor({
   catalog: Resource[]
   row?: Row
   onClose: () => void
-  onSaved: () => void
+  onSaved: (row: Row) => void
   title?: string
   initialValues?: Record<string, unknown>
 }) {
@@ -232,15 +232,16 @@ export function RecordEditor({
     pending.current = true
     setBusy(true)
     try {
-      if (row) await api.update(resource.name, row, body)
+      let result: Row
+      if (row) result = await api.update(resource.name, row, body)
       else {
         const serialized = JSON.stringify(body)
         if (submission.current?.body !== serialized)
           submission.current = { body: serialized, key: crypto.randomUUID() }
-        if (withHistory) await api.createAttentionWithHistory(body, submission.current.key)
-        else await api.create(resource.name, body, submission.current.key)
+        if (withHistory) result = await api.createAttentionWithHistory(body, submission.current.key)
+        else result = await api.create(resource.name, body, submission.current.key)
       }
-      if (mounted.current) onSaved()
+      if (mounted.current) onSaved(result)
     } catch (cause) {
       if (mounted.current) {
         setProblem(cause instanceof ApiError && cause.status === 404 && isPet

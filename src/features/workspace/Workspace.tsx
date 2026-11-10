@@ -72,7 +72,7 @@ export function Workspace({
       <select
         aria-label="Organización"
         value={organization}
-        onChange={(event) => setOrganization(event.target.value)}
+        onChange={(event) => { if (document.dispatchEvent(new Event('superkanes:before-navigation', { cancelable: true }))) setOrganization(event.target.value) }}
       >
         {profile.organizations.map((org) => (
           <option key={org.id} value={org.id}>
@@ -89,7 +89,7 @@ export function Workspace({
       organization={organization}
       selector={selector}
       userName={profile.nombre}
-      onLogout={onLogout}
+      onLogout={() => { if (document.dispatchEvent(new Event('superkanes:before-navigation', { cancelable: true }))) onLogout() }}
       logoutBusy={logoutBusy}
       error={error || problem}
       onExpired={expired}
@@ -162,6 +162,7 @@ function OrganizationWorkspace({
   })
   const resource = options.find((r) => r.name === selected) ?? options[0]
   function navigate(id: string, name = '') {
+    if (!document.dispatchEvent(new Event('superkanes:before-navigation', { cancelable: true }))) return
     setActive(id)
     setSelected(name)
   }
@@ -170,7 +171,7 @@ function OrganizationWorkspace({
       items={available}
       active={group.id}
       onNavigate={navigate}
-      onLogout={onLogout}
+      onLogout={() => { if (document.dispatchEvent(new Event('superkanes:before-navigation', { cancelable: true }))) onLogout() }}
       logoutBusy={logoutBusy}
       organizationControl={selector}
       userName={userName}
@@ -211,7 +212,7 @@ function OrganizationWorkspace({
               <select
                 aria-label="Sección"
                 value={resource.name}
-                onChange={(event) => setSelected(event.target.value)}
+                onChange={(event) => { if (document.dispatchEvent(new Event('superkanes:before-navigation', { cancelable: true }))) setSelected(event.target.value) }}
               >
                 {options.map((r) => (
                   <option key={r.name} value={r.name}>

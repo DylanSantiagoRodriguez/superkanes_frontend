@@ -24,3 +24,12 @@
 .filters input,.filters select { border: 1px solid var(--color-border); padding: 9px; border-radius: 6px; font: inherit; }
 .timeline { list-style: none; padding: 0 20px; background: white; border-radius: 10px; }
 @media(max-width: 750px) { .grid { grid-template-columns: 1fr; } .actions { margin-left: 0; width: 100%; } .filters label { width: 100%; } }
+.consultation { display: grid; gap: 20px; }
+.consultation label { display: grid; gap: 7px; font-size: 14px; }
+.consultation input,.consultation select,.consultation textarea { width: 100%; font: inherit; color: inherit; padding: 12px; border: 1px solid var(--color-border); border-radius: 7px; background: white; }
+.consultation textarea { resize: vertical; }
+.soap { display: grid; gap: 18px; border: 0; padding: 0; margin: 0 0 20px; }
+.soap:disabled textarea { background: #f8faf8; color: #364a40; }
+.detailSection { border-top: 1px solid var(--color-border); padding-top: 16px; }
+.comparison { display: grid; gap: 12px; }
+.comparison p { white-space: pre-wrap; }

@@ -5,7 +5,7 @@ import { PatientPhoto } from '../workspace/PatientPhoto'
 import { RecordEditor } from '../workspace/RecordEditor'
 import { label, rowLabel } from '../workspace/model'
 import type { Api, Page, Resource, Row } from '../workspace/model'
-import { AttentionHistory } from './AttentionHistory'
+import { Consultation } from './Consultation'
 import styles from './PatientChart.module.css'
 
 export interface PatientSummary {
@@ -31,6 +31,7 @@ export function PatientChart({ api, patientId, catalog, onBack }: { api: Api; pa
   const [refresh, setRefresh] = useState(0)
   const [section, setSection] = useState('resumen')
   const [creating, setCreating] = useState<string | null>(null)
+  const [dirty, setDirty] = useState(false)
   const [attention, setAttention] = useState<Row | null>(null)
   const contract = (name: string) => catalog.find(item => item.name === name)
   useEffect(() => {
@@ -41,7 +42,7 @@ export function PatientChart({ api, patientId, catalog, onBack }: { api: Api; pa
   }, [api, patientId, refresh])
   const patient = summary?.patient
   return <article className={styles.chart} aria-label="Ficha clínica del paciente">
-    <button onClick={onBack}>← Volver a pacientes</button>
+    <button disabled={dirty} onClick={onBack}>← Volver a pacientes</button>
     {problem && <p role="alert">{problem} <button onClick={() => setRefresh(value => value + 1)}>Reintentar ficha</button></p>}
     {!summary ? !problem && <p role="status">Cargando ficha clínica…</p> : <>
       <header className={styles.header}>
@@ -65,8 +66,9 @@ export function PatientChart({ api, patientId, catalog, onBack }: { api: Api; pa
           {summary.overview.alertas.page.next && <button onClick={() => setSection('alertas')}>Ver todas las alertas</button>}
         </> : <p>No hay alertas registradas. Confirma los antecedentes durante la consulta.</p>}
       </section>
-      <nav className={styles.tabs} aria-label="Secciones del paciente">{sections.map(([id, text]) => <button key={id} aria-current={section === id ? 'page' : undefined} onClick={() => { setSection(id); setAttention(null) }}>{text}</button>)}</nav>
-      {attention ? <Panel title="Consulta seleccionada" action={<button onClick={() => setAttention(null)}>Volver a la historia</button>}><AttentionHistory api={api} attention={attention} catalog={catalog} /></Panel> : section === 'resumen' ? <div className={styles.grid}>
+      {dirty && <p role="status">Guarda la consulta antes de cambiar de sección.</p>}
+      <nav className={styles.tabs} aria-label="Secciones del paciente">{sections.map(([id, text]) => <button disabled={dirty} key={id} aria-current={section === id ? 'page' : undefined} onClick={() => { setSection(id); setAttention(null) }}>{text}</button>)}</nav>
+      {attention ? <Panel title="Consulta seleccionada" action={<button disabled={dirty} onClick={() => setAttention(null)}>Volver a la historia</button>}><Consultation key={attention.id} api={api} attention={attention} catalog={catalog} onDirty={setDirty} /></Panel> : section === 'resumen' ? <div className={styles.grid}>
         {([['revisiones', 'Últimas notas clínicas'], ['vacunas', 'Últimas vacunas'], ['controles', 'Controles programados'], ['pendientes', 'Pendientes vacunales']] as const).map(([key, title]) => <Panel key={key} title={title}>
           {summary.overview[key] === null ? <p>Sin permiso para consultar esta información.</p> : !summary.overview[key]?.data.length ? <p>No hay registros disponibles.</p> : summary.overview[key]!.data.map(row => <div className={styles.entry} key={row.id}><strong>{rowLabel(row)}</strong><p>{date(row.fecha)} · {String(row.estado ?? '')}</p>{row.motivo_consulta != null && <p>{String(row.motivo_consulta)}</p>}</div>)}
           <button onClick={() => setSection(key === 'revisiones' ? 'consultas' : key)}>Consultar registros</button>
@@ -74,7 +76,7 @@ export function PatientChart({ api, patientId, catalog, onBack }: { api: Api; pa
       </div> : <PatientRecords key={`${section}:${refresh}`} api={api} patientId={patientId} section={section} onAttention={setAttention} />}
       {creating && contract(creating) && <RecordEditor api={api} resource={contract(creating)!} catalog={catalog} initialValues={{ mascota_id: patientId, ...(creating === 'atencion_clinica' ? { fecha_atencion: new Date().toISOString() } : {}), ...(creating === 'cita' ? { tipo: 'clinica', tutor_contacto_id: summary.guardian?.id } : {}) }}
         title={creating === 'atencion_clinica' ? 'Nueva consulta del paciente' : creating === 'cita' ? 'Programar control del paciente' : 'Registrar alerta clínica'}
-        onClose={() => setCreating(null)} onSaved={() => { setCreating(null); setRefresh(value => value + 1); setSection(creating === 'atencion_clinica' ? 'consultas' : 'resumen') }} />}
+        onClose={() => setCreating(null)} onSaved={saved => { setCreating(null); setRefresh(value => value + 1); setSection(creating === 'atencion_clinica' ? 'consultas' : 'resumen'); if (creating === 'atencion_clinica') setAttention(saved) }} />}
     </>}
   </article>
 }
