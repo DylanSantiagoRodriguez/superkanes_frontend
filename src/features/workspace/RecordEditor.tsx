@@ -75,7 +75,7 @@ export function RecordEditor({
       { name: 'documento', type: 'jsonb', nullable: true, required: false, enum: [], default: null, create: true, update: false, reference: null }
     ] as Field[] : [])
   ]
-  const initial: Record<string, unknown> = row ?? { ...initialValues, ...(withHistory ? { documento: clinicalTemplate } : {}) }
+  const initial: Record<string, unknown> = row ?? { ...(withHistory ? { documento: clinicalTemplate } : {}), ...initialValues }
   const [values, setValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(
       fields.map((field) => [field.name, inputValue(field, initial[field.name])])

@@ -1,3 +1,4 @@
+import type { PatientSummary } from '../clinical/PatientChart'
 import { requestJson } from '../../shared/api/http'
 export type Row = Record<string, unknown> & { id: string; version?: number }
 export interface Field {
@@ -282,6 +283,11 @@ export function createApi(
   const base = (resource: string) =>
     `/resources/${encodeURIComponent(resource)}`
   return {
+    patientSummary: async (id: string, signal?: AbortSignal) => ((await request(`/resources/clinica/pacientes/${encodeURIComponent(id)}`, { signal })) as { data: PatientSummary }).data,
+    patientRecords: async (id: string, section: string, query: Record<string, string> = {}, signal?: AbortSignal) => {
+      const params = new URLSearchParams(Object.entries(query).filter(([, value]) => value))
+      return await request(`/resources/clinica/pacientes/${encodeURIComponent(id)}/registros/${encodeURIComponent(section)}?${params}`, { signal }) as Page & { unavailable?: string[] }
+    },
     clinicalAuthor: async () => ((await request('/resources/atencion_clinica/autor')) as { data: Row | null }).data,
     createAttentionWithHistory: async (body: Record<string, unknown>, key: string) =>
       ((await request('/resources/atencion_clinica/con-historia', { method: 'POST', body, headers: { 'Idempotency-Key': key } })) as { data: Row }).data,

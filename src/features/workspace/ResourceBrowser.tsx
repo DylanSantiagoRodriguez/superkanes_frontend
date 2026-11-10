@@ -1,3 +1,4 @@
+import { PatientChart } from '../clinical/PatientChart'
 import { AttentionHistory } from '../clinical/AttentionHistory'
 import { ClinicalDocument } from '../clinical/ClinicalDocument'
 import type { JSONContent } from '@tiptap/react'
@@ -37,6 +38,7 @@ export function ResourceBrowser({
   resource: Resource
   catalog: Resource[]
 }) {
+  const [chartId, setChartId] = useState<string | null>(null)
   const [page, setPage] = useState<Page | null>(null)
   const [cursor, setCursor] = useState<string | undefined>()
   const [history, setHistory] = useState<(string | undefined)[]>([])
@@ -57,7 +59,7 @@ export function ResourceBrowser({
   const mutationPending = useRef(false)
   useEffect(() => {
     mounted.current = true
-    return () => {
+  return () => {
       mounted.current = false
     }
   }, [])
@@ -199,6 +201,7 @@ export function ResourceBrowser({
           resource.deletionEffect?.[1] === 'cancelado'
         ? 'Cancelar registro'
         : 'Desactivar'
+    if (chartId) return <PatientChart api={api} patientId={chartId} catalog={catalog} onBack={() => setChartId(null)} />
   return (
     <>
       {notices[resource.name] && (
@@ -377,6 +380,7 @@ export function ResourceBrowser({
             <h2 id="detail-title">{rowLabel(selected)}</h2>
             <button onClick={() => setSelected(null)}>Cerrar</button>
           </div>
+          {resource.name === 'mascota' && <button className={styles.primary} onClick={() => { setChartId(selected.id); setSelected(null) }}>Abrir ficha clínica</button>}
           {resource.name === 'mascota' && <PatientPhoto api={api} id={String(selected.foto_archivo_id ?? '')} name={String(selected.nombre ?? '')} />}
           {resource.name === 'revision_clinica' && selected.documento != null && <ClinicalDocument readOnly value={selected.documento as JSONContent} />}
           {resource.name === 'atencion_clinica' && <AttentionHistory api={api} attention={selected} catalog={catalog} />}
