@@ -20,7 +20,7 @@ export function PatientPhoto({ api, id, name }: { api: Api; id: string; name: st
   </figure>
 }
 
-export function PatientPhotoInput({ api, value, name, onChange, onBusy }: { api: Api; value: string; name: string; onChange: (id: string) => void; onBusy: (busy: boolean) => void }) {
+export function PatientPhotoInput({ inputId = 'patient-photo', api, value, name, onChange, onBusy }: { inputId?: string; api: Api; value: string; name: string; onChange: (id: string) => void; onBusy: (busy: boolean) => void }) {
   const [problem, setProblem] = useState('')
   const [busy, setBusy] = useState(false)
   const [candidate, setCandidate] = useState<File | null>(null)
@@ -39,8 +39,8 @@ export function PatientPhotoInput({ api, value, name, onChange, onBusy }: { api:
   }
   return <div>
     <PatientPhoto api={api} id={value} name={name} />
-    <label htmlFor="patient-photo">Foto del paciente (JPEG, PNG o WebP, hasta 10 MB)</label>
-    <input id="patient-photo" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={e => {
+    <label htmlFor={inputId}>Foto del paciente (JPEG, PNG o WebP, hasta 10 MB)</label>
+    <input id={inputId} type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={e => {
       const file = e.target.files?.[0]; e.target.value = ''
       if (file) { key.current = crypto.randomUUID(); setCandidate(file); void upload(file) }
     }} />

@@ -111,7 +111,7 @@ module.exports = async function chartBrowser({base,adminToken,renewedToken,user}
       await page.getByRole('button',{name:'Guardar',exact:true}).click();
       await consents.getByRole('button',{name:'Registrar aceptación o rechazo',exact:true}).click();
       await page.locator('#field-tutor_id option').nth(1).waitFor({state:'attached'});
-      await page.locator('#field-tutor_id').selectOption({label:'Ana Prueba'});
+      await page.locator('#field-tutor_id').selectOption(await page.locator('#field-tutor_id option').filter({hasText:/^Ana Prueba ·/}).getAttribute('value'));
       await page.locator('#field-evidencia_archivo_id').selectOption({index:1});
       await page.getByRole('button',{name:'Guardar',exact:true}).click();
       await consents.getByRole('heading',{name:'Procedimiento consentido de prueba · aceptado',exact:true}).waitFor();

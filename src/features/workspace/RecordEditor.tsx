@@ -1,3 +1,4 @@
+import { RelationPicker } from './RelationPicker'
 import { ClinicalDocument } from '../clinical/ClinicalDocument'
 import { clinicalTemplate } from '../clinical/clinical-template'
 import type { JSONContent } from '@tiptap/react'
@@ -54,17 +55,23 @@ export function RecordEditor({
   onClose,
   onSaved,
   title,
-  initialValues
+  initialValues,
+  depth = 0
 }: {
   api: Api
   resource: Resource
   catalog: Resource[]
   row?: Row
   onClose: () => void
-  onSaved: (row: Row) => void
+  onSaved: (row: Row, tutorId?: string) => void
   title?: string
   initialValues?: Record<string, unknown>
+  depth?: number
 }) {
+  const [creatingRelation, setCreatingRelation] = useState<{ field: Field; resource: Resource } | null>(null)
+  const editorId = depth ? `editor-title-${depth}` : 'editor-title'
+  const autoContact = useRef('')
+  const selectionRequest = useRef(0)
   const isPet = resource.name === 'mascota'
   const withHistory = resource.name === 'atencion_clinica' && !row
   const revisionResource = catalog.find(item => item.name === 'revision_clinica')
@@ -124,7 +131,7 @@ export function RecordEditor({
   useEffect(() => {
     let live = true
     for (const target of linkTargets.split(',').filter(Boolean)) {
-      if (isPet && target === 'raza') continue
+      if ((isPet && target === 'raza') || ['mascota', 'tutor'].includes(target)) continue
       if (withHistory && target === 'profesional') {
         api.clinicalAuthor().then(author => {
           if (!live) return
@@ -192,6 +199,27 @@ export function RecordEditor({
         }))
     }
   }
+  async function selectRelation(field: Field, id: string, selected?: Row, tutorId?: string) {
+    setValues(current => ({ ...current, [field.name]: id }))
+    if (field.name === 'tutor_contacto_id') { autoContact.current = ''; selectionRequest.current++; return }
+    if (field.reference?.resource !== 'mascota' || resource.name !== 'cita') return
+    const generation = ++selectionRequest.current
+    const canSuggest = !values.tutor_contacto_id || values.tutor_contacto_id === autoContact.current
+    if (!canSuggest) return
+    setValues(current => ({ ...current, tutor_contacto_id: '' }))
+    autoContact.current = ''
+    let contact = tutorId ?? String(selected?.tutor_principal_id ?? '')
+    if (!contact && id && catalog.some(r => r.name === 'mascota_tutor')) {
+      try {
+        const page = await api.list('mascota_tutor', undefined, { mascota_id: id, es_principal: true, vigente_hasta: null })
+        contact = String(page.data[0]?.tutor_id ?? '')
+      } catch { return } // Contact remains editable if the link is unavailable.
+    }
+    if (contact && mounted.current && generation === selectionRequest.current) {
+      autoContact.current = contact
+      setValues(current => current.mascota_id === id && !current.tutor_contacto_id ? { ...current, tutor_contacto_id: contact } : current)
+    }
+  }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (pending.current || conflict || uploading) return
@@ -241,7 +269,7 @@ export function RecordEditor({
         if (withHistory) result = await api.createAttentionWithHistory(body, submission.current.key)
         else result = await api.create(resource.name, body, submission.current.key)
       }
-      if (mounted.current) onSaved(result)
+      if (mounted.current) onSaved(result, isPet && !row ? values.tutor_principal_id : undefined)
     } catch (cause) {
       if (mounted.current) {
         setProblem(cause instanceof ApiError && cause.status === 404 && isPet
@@ -264,6 +292,7 @@ export function RecordEditor({
       field.name === 'foto_archivo_id' ||
       !field.required ||
       !field.reference ||
+      (['mascota', 'tutor'].includes(field.reference.resource) && catalog.some(r => r.name === field.reference!.resource)) ||
       Boolean(
         links[field.reference.resource] &&
         !links[field.reference.resource].error
@@ -273,15 +302,16 @@ export function RecordEditor({
     <dialog
       ref={dialog}
       className={`${styles.dialog} ${(resource.name === 'revision_clinica' || withHistory) ? styles.documentDialog : ''}`}
-      aria-labelledby="editor-title"
+      aria-labelledby={editorId}
       onCancel={(event) => {
         event.preventDefault()
+        event.stopPropagation()
         close()
       }}
     >
       <div className={styles.dialogHeader}>
         <div>
-          <h2 id="editor-title">
+          <h2 id={editorId}>
             {title ?? (withHistory ? 'Nueva atención e historia clínica' : row ? 'Editar registro' : 'Nuevo registro')}
           </h2>
           <p>{label(resource.name)}</p>
@@ -318,6 +348,7 @@ export function RecordEditor({
         <button type="button" onClick={() => setDiscarding(false)}>Seguir editando</button>{' '}
         <button type="button" onClick={onClose}>Descartar cambios</button>
       </div>}
+      {depth > 0 && <p className={styles.notice}>Al guardar se crea este registro. Se conservará aunque después canceles el formulario anterior.</p>}
       <form onSubmit={(event) => void submit(event)}>
         <fieldset disabled={busy || conflict || uploading} className={styles.formGrid}>
           {fields.map((field) => {
@@ -358,7 +389,7 @@ export function RecordEditor({
             )
               choices = ['cancelado']
             const props = {
-              id: `field-${field.name}`,
+              id: `${depth ? `nested-${depth}-` : ''}field-${field.name}`,
               name: field.name,
               value,
               required,
@@ -386,13 +417,17 @@ export function RecordEditor({
                   <ClinicalDocument value={value ? JSON.parse(value) as JSONContent : null} disabled={busy || conflict} onChange={document => setValues(current => ({ ...current, [field.name]: JSON.stringify(document) }))} />
                 ) : resource.name === 'mascota' && field.name === 'foto_archivo_id' ? (
                   catalog.find(r => r.name === 'archivo')?.permissions.create ?
-                    <PatientPhotoInput api={api} value={value} name={values.nombre ?? ''} onBusy={setUploading} onChange={id => setValues(current => ({ ...current, [field.name]: id }))} /> : <p>No tienes permiso para cargar fotos. Puedes conservar la foto actual.</p>
+                    <PatientPhotoInput inputId={`${props.id}-upload`} api={api} value={value} name={values.nombre ?? ''} onBusy={setUploading} onChange={id => setValues(current => ({ ...current, [field.name]: id }))} /> : <p>No tienes permiso para cargar fotos. Puedes conservar la foto actual.</p>
                 ) : withHistory && field.name === 'profesional_id' ? (
                   <>
                     <input id={props.id} readOnly value={options?.rows[0] ? rowLabel(options.rows[0]) : 'Consultando tu perfil profesional…'} />
                     <p className={styles.hint}>La historia queda a nombre del profesional vinculado a tu sesión.</p>
                     {options?.error && <p className={styles.fieldError} role="alert">{options.error}</p>}
                   </>
+                ) : ref && ['mascota', 'tutor'].includes(ref.resource) && catalog.some(r => r.name === ref.resource) ? (
+                  <RelationPicker api={api} target={ref.resource} id={props.id} name={field.name} value={value} required={required}
+                    onChange={(id, selected) => { void selectRelation(field, id, selected) }}
+                    onCreate={catalog.find(r => r.name === ref.resource)?.permissions.create ? () => setCreatingRelation({ field, resource: catalog.find(r => r.name === ref.resource)! }) : undefined} />
                 ) : ref ? (
                   <>
                     <select
@@ -509,6 +544,15 @@ export function RecordEditor({
           </button>
         </div>
       </form>
+      {creatingRelation && <RecordEditor
+        api={api} resource={creatingRelation.resource} catalog={catalog} depth={depth + 1}
+        title={creatingRelation.resource.name === 'mascota' ? 'Nueva mascota sin salir del formulario' : 'Nuevo tutor sin salir del formulario'}
+        onClose={() => setCreatingRelation(null)}
+        onSaved={(saved, tutorId) => {
+          void selectRelation(creatingRelation.field, saved.id, saved, tutorId)
+          setCreatingRelation(null)
+        }}
+      />}
     </dialog>
   )
 }

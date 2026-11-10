@@ -490,6 +490,11 @@ export function createApi(
       if (filter) params.set('filter', JSON.stringify(filter))
       return (await request(`${base(resource)}?${params}`, { signal })) as Page
     },
+    searchRelations: async (resource: string, search: string, after?: string, signal?: AbortSignal) => {
+      const params = new URLSearchParams({ limit: '25', search })
+      if (after) params.set('after', after)
+      return (await request(`${base(resource)}?${params}`, { signal })) as Page
+    },
     get: async (resource: string, id: string) =>
       (
         (await request(`${base(resource)}/${encodeURIComponent(id)}`)) as {
