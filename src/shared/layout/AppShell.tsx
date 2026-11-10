@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { AppIcon } from '../ui/AppIcon'
 import styles from './AppShell.module.css'
 export interface NavigationItem {
   id: string
@@ -31,7 +32,7 @@ export function AppShell({
       </a>
       <aside className={styles.sidebar}>
         <div className={styles.brand}>
-          <span aria-hidden="true">✳</span> superkanes.
+          <span><AppIcon name="pets" size={30} /></span> superkanes.
         </div>
         <div className={styles.clinic}>{organizationControl}</div>
         <p className={styles.label}>ESPACIO DE TRABAJO</p>
@@ -42,7 +43,7 @@ export function AppShell({
               aria-current={active === item.id ? 'page' : undefined}
               onClick={() => onNavigate(item.id)}
             >
-              <span aria-hidden="true">{item.symbol}</span>
+              <span><AppIcon name={item.id} /></span>
               {item.label}
             </button>
           ))}

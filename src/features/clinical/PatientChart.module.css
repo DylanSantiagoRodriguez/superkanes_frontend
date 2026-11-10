@@ -1,35 +1,66 @@
-.chart { display: grid; gap: 20px; }
-.chart button { border: 1px solid var(--color-border); border-radius: 7px; padding: 10px 14px; background: white; color: var(--color-primary); cursor: pointer; font: inherit; }
-.chart button:disabled { opacity: .6; cursor: wait; }
-.header { display: flex; align-items: center; gap: 24px; background: white; padding: 24px; border: 1px solid var(--color-border); border-radius: 12px; flex-wrap: wrap; }
-.header figure { margin: 0; width: 130px; }
-.header figure img { max-width: 130px; height: 130px; object-fit: cover; }
-.header h2 { font-size: 30px; margin: 6px 0; }
-.header p { margin: 8px 0; }
-.eyebrow { font-size: 11px; letter-spacing: 1px; color: var(--color-primary); }
+.chart { display: grid; gap: 22px; min-width: 0; font-size: 14px; }
+.chart button { border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 10px 14px; background: var(--surface); color: var(--color-primary); font: inherit; font-weight: 550; }
+.chart button:hover:not(:disabled) { border-color: var(--color-primary-border); background: var(--surface-hover); }
+.chart button:disabled { opacity: .55; cursor: not-allowed; }
+.chart > button:first-child { justify-self: start; }
+.header { display: flex; align-items: center; gap: 24px; background: var(--surface); padding: 28px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); flex-wrap: wrap; box-shadow: var(--shadow-card); }
+.header figure { margin: 0; width: 130px; flex-shrink: 0; flex-direction: column; gap: 8px; }
+.header figure > div { width: 130px; min-height: 130px; border-radius: 50%; padding: 20px; }
+.header figcaption { font-size: 12px; color: var(--color-muted); text-align: center; overflow-wrap: anywhere; }
+.header figure img { max-width: 130px; height: 130px; object-fit: cover; border-radius: 50%; }
+.header > div { min-width: 0; overflow-wrap: anywhere; }
+.header h2 { font-size: clamp(28px, 3vw, 38px); line-height: 1.2; margin: 6px 0 12px; letter-spacing: -1px; }
+.header p { margin: 7px 0; }
+.eyebrow { font-size: 11px; letter-spacing: 1px; font-weight: 650; color: var(--color-primary); }
 .actions { display: grid; gap: 10px; margin-left: auto; }
-.chart .primary { background: var(--color-primary); color: white; }
-.alerts { padding: 18px 22px; border: 1px solid #e5d2a0; background: #fffbef; border-radius: 9px; }
-.tabs { display: flex; flex-wrap: wrap; gap: 7px; }
-.tabs button[aria-current] { background: var(--color-primary); color: white; }
-.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
-.entry { border-bottom: 1px solid var(--color-border); padding: 18px 0; overflow-wrap: anywhere; }
-.entryHeader { display: flex; gap: 12px; justify-content: space-between; flex-wrap: wrap; }
+.chart .primary { background: var(--color-primary); border-color: var(--color-primary); color: var(--surface); }
+.chart .primary:hover:not(:disabled) { background: var(--color-primary-hover); border-color: var(--color-primary-hover); }
+.alerts { padding: 18px 22px; border: 1px solid var(--color-warning-border); background: var(--color-warning-bg); color: var(--color-warning); border-radius: var(--radius); }
+.alerts p { margin: 7px 0 0; }
+.tabs { display: flex; flex-wrap: wrap; gap: 4px 8px; border-bottom: 1px solid var(--color-border); padding-bottom: 4px; }
+.tabs button { border: 0; border-bottom: 3px solid transparent; border-radius: 6px 6px 0 0; background: transparent; color: var(--color-muted); padding: 12px 14px; }
+.tabs button:hover:not(:disabled) { border-color: transparent; background: var(--surface-hover); }
+.tabs button[aria-current] { background: var(--color-primary-soft); border-color: var(--color-primary); color: var(--color-primary-hover); }
+.tabs button[aria-current]:hover:not(:disabled) { border-color: var(--color-primary); }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
+.grid > section > .entry { padding-inline: 24px; }
+.grid > section > p { margin-inline: 24px; }
+.grid > section > button { margin: 16px 24px 24px; }
+.entry { border-bottom: 1px solid var(--color-divider); padding: 20px 0; overflow-wrap: anywhere; }
+.entry:last-child { border-bottom: 0; }
+.entryHeader { display: flex; gap: 12px; justify-content: space-between; flex-wrap: wrap; align-items: start; }
 .entry time { color: var(--color-muted); font-size: 13px; }
-.entry dl { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 12px; }
+.entry dl { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(180px, 100%),1fr)); gap: 14px; }
 .entry dt { color: var(--color-muted); font-size: 12px; }
 .entry dd { margin: 4px 0 0; white-space: pre-wrap; }
-.filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; background: white; padding: 16px; border-radius: 9px; }
-.filters label { display: grid; gap: 5px; font-size: 13px; }
-.filters input,.filters select { border: 1px solid var(--color-border); padding: 9px; border-radius: 6px; font: inherit; }
-.timeline { list-style: none; padding: 0 20px; background: white; border-radius: 10px; }
-@media(max-width: 750px) { .grid { grid-template-columns: 1fr; } .actions { margin-left: 0; width: 100%; } .filters label { width: 100%; } }
-.consultation { display: grid; gap: 20px; }
-.consultation label { display: grid; gap: 7px; font-size: 14px; }
-.consultation input,.consultation select,.consultation textarea { width: 100%; font: inherit; color: inherit; padding: 12px; border: 1px solid var(--color-border); border-radius: 7px; background: white; }
-.consultation textarea { resize: vertical; }
-.soap { display: grid; gap: 18px; border: 0; padding: 0; margin: 0 0 20px; }
-.soap:disabled textarea { background: #f8faf8; color: #364a40; }
+.filters { display: flex; flex-wrap: wrap; gap: 14px; align-items: end; background: var(--surface); padding: 20px; border: 1px solid var(--color-border); border-radius: var(--radius); }
+.filters label { display: grid; gap: 6px; font-size: 13px; min-width: 0; }
+.filters input,.filters select { border: 1px solid var(--color-border); padding: 10px 12px; border-radius: var(--radius-sm); font: inherit; }
+.timeline { list-style: none; margin: 0; padding: 0 24px; background: var(--surface); border: 1px solid var(--color-border); border-radius: var(--radius); }
+.timeline .entry > button + button { margin-left: 6px; }
+.consultation { display: grid; gap: 22px; padding: 0 24px 24px; min-width: 0; }
+.consultation > form, .consultation > section, .consultation > details { padding: 22px; background: var(--surface); border: 1px solid var(--color-border); border-radius: var(--radius); min-width: 0; }
+.consultation > form { background: var(--surface-page); }
+.consultation .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-left: 0; }
+.consultation h3 { margin-top: 0; font-size: 17px; }
+.consultation label { display: grid; gap: 8px; font-size: 13px; font-weight: 550; }
+.consultation input,.consultation select,.consultation textarea { width: 100%; font: inherit; color: inherit; padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--surface); }
+.consultation input:focus,.consultation select:focus,.consultation textarea:focus { border-color: var(--color-primary); }
+.consultation textarea { resize: vertical; line-height: 1.7; font-weight: 400; }
+.soap { display: grid; gap: 18px; border: 0; padding: 0; margin: 0 0 20px; min-width: 0; }
+.soap:disabled textarea, .consultation input:disabled, .consultation select:disabled { background: var(--surface-disabled); color: var(--color-muted); }
 .detailSection { border-top: 1px solid var(--color-border); padding-top: 16px; }
 .comparison { display: grid; gap: 12px; }
 .comparison p { white-space: pre-wrap; }
+@media(max-width: 750px) { .grid { grid-template-columns: minmax(0, 1fr); } .actions { margin-left: 0; width: 100%; } .filters label { width: 100%; } .header { padding: 20px; gap: 18px; } .tabs { gap: 4px; } .tabs button { padding: 10px; font-size: 13px; } .consultation { padding: 0 16px 16px; } .consultation > form, .consultation > section, .consultation > details { padding: 16px; } .timeline { padding: 0 16px; } }
+@media(max-width: 540px) { .consultation .actions { flex-direction: column; align-items: stretch; } .consultation input, .consultation select, .consultation textarea, .filters input, .filters select { font-size: 16px; } }
+
+.documentList { padding: 24px; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--surface); min-width: 0; overflow-wrap: anywhere; }
+.documentList h3 { margin-top: 0; font-size: 18px; }
+.documentList > p { color: var(--color-muted); font-size: 13px; }
+.documentList > article { margin: 16px 0; padding: 20px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--surface-page); }
+.documentList h4 { margin: 0 0 8px; }
+.documentList article p { color: var(--color-muted); font-size: 13px; }
+.documentList article button { margin-top: 6px; }
+.documentList > div > button { margin-bottom: 16px; }
+@media(max-width: 540px) { .documentList { padding: 16px; } .documentList > article { padding: 16px; } .grid > section > .entry { padding-inline: 20px; } }

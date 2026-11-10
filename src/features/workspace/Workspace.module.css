@@ -27,7 +27,7 @@
 .orgLabel select {
   width: 100%;
   min-width: 0;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--color-border);
   padding: 7px;
   border-radius: 5px;
@@ -50,9 +50,9 @@
   width: 100%;
   min-width: 0;
   border: 1px solid var(--color-border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 10px 12px;
-  background: white;
+  background: var(--surface);
   color: inherit;
   font: inherit;
 }
@@ -66,8 +66,8 @@
   text-align: left;
   padding: 22px;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
-  background: white;
+  border-radius: var(--radius);
+  background: var(--surface);
   color: inherit;
 }
 .summary > span {
@@ -91,9 +91,9 @@
   gap: 12px;
   text-align: left;
   color: inherit;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--radius);
   padding: 24px;
 }
 .moduleGrid button:hover,
@@ -119,20 +119,20 @@
 .dialogHeader button,
 .error button {
   border: 1px solid var(--color-border);
-  background: white;
+  background: var(--surface);
   color: var(--color-primary);
   padding: 9px 13px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 13px;
 }
 .actions .primary {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: white;
+  color: var(--surface);
 }
 .actions .danger {
-  color: #8f342e;
-  border-color: #dfb1aa;
+  color: var(--color-danger);
+  border-color: var(--color-danger-border);
 }
 .actions button:disabled,
 .pagination button:disabled {
@@ -163,7 +163,7 @@
   font-size: 13px;
 }
 .tableScroll th {
-  background: #f5f8f5;
+  background: var(--surface-page);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -172,7 +172,7 @@
 .tableScroll th,
 .tableScroll td {
   padding: 14px 20px;
-  border-bottom: 1px solid #edf0ed;
+  border-bottom: 1px solid var(--color-divider);
   max-width: 280px;
   overflow-wrap: anywhere;
 }
@@ -201,17 +201,17 @@
   overflow-wrap: anywhere;
 }
 .notice {
-  color: #765320;
-  background: #fcf2df;
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
 }
 .success {
-  color: #235c47;
-  background: #e7f3e9;
+  color: var(--color-success);
+  background: var(--color-success-bg);
 }
 .error,
 .fieldError {
-  color: #8f342e;
-  background: #fff0ee;
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
 }
 .fieldError {
   padding: 8px;
@@ -224,13 +224,13 @@
   width: min(760px, calc(100% - 32px));
   max-height: calc(100dvh - 32px);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 28px;
   color: inherit;
   overflow-y: auto;
 }
 .dialog::backdrop {
-  background: #183b3077;
+  background: var(--color-backdrop);
 }
 .dialogHeader {
   display: flex;
@@ -339,7 +339,38 @@
 
 .documentDialog { width: min(1200px, 96vw); max-width: 96vw; }
 .patientPhoto { margin: 0 0 18px; display: flex; align-items: center; gap: 20px; }
-.patientPhoto img { width: 140px; height: 140px; object-fit: cover; border-radius: 18px; border: 1px solid #cbd5df; }
+.patientPhoto img { width: 140px; height: 140px; object-fit: cover; border-radius: 18px; border: 1px solid var(--color-border); }
 .patientPhoto figcaption { font-size: 1.2rem; font-weight: 700; }
-.photoPlaceholder { width: 140px; min-height: 100px; display: grid; place-content: center; padding: 12px; background: #edf4f2; border-radius: 18px; font-size: .8rem; text-align: center; }
+.photoPlaceholder { width: 140px; min-height: 100px; display: grid; place-content: center; padding: 12px; background: var(--color-primary-soft); border-radius: 18px; font-size: .8rem; text-align: center; }
 .details dd { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Shared spacing and surfaces for every resource view. */
+.heading h1 { font-weight: 700; color: var(--color-text); }
+.summary, .moduleGrid button { box-shadow: var(--shadow-card); transition: border-color .15s, box-shadow .15s; }
+.summary { gap: 4px; }
+.summary > span { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-weight: 550; color: var(--color-muted); }
+.summary > span svg { color: var(--color-primary); flex-shrink: 0; }
+.summary strong { letter-spacing: -1.5px; color: var(--color-brand); }
+.summary small { font-size: 12px; line-height: 1.6; }
+.moduleGrid button:hover, .summary:hover { background: var(--surface); box-shadow: var(--shadow-hover); }
+.moduleGrid button > span { display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--radius); background: var(--color-primary-soft); }
+.moduleGrid strong { font-size: 15px; }
+.moduleGrid small { font-size: 12px; }
+.actions button:hover:not(:disabled), .pagination button:hover:not(:disabled), .tableScroll button:hover:not(:disabled), .dialogHeader button:hover:not(:disabled) { background: var(--surface-hover); border-color: var(--color-primary-border); }
+.actions .primary:hover:not(:disabled) { background: var(--color-primary-hover); border-color: var(--color-primary-hover); }
+.actions .danger:hover:not(:disabled) { background: var(--color-danger-bg); border-color: var(--color-danger); }
+.tableScroll th { color: var(--color-muted); font-weight: 600; }
+.tableScroll tbody tr:hover { background: var(--surface-hover); }
+.dialog { background: var(--surface); box-shadow: var(--shadow-dialog); }
+.dialogHeader { padding-bottom: 20px; border-bottom: 1px solid var(--color-border); }
+.dialogHeader button { flex-shrink: 0; }
+.formGrid label { font-weight: 550; color: var(--color-text); }
+.formGrid input:focus, .formGrid select:focus, .formGrid textarea:focus, .toolbar input:focus, .toolbar select:focus, .resourceSelect select:focus { border-color: var(--color-primary); }
+.formGrid input:disabled, .formGrid select:disabled, .formGrid textarea:disabled { background: var(--surface-disabled); color: var(--color-muted); }
+.notice { border: 1px solid var(--color-warning-border); }
+.success { border: 1px solid var(--color-success-border); }
+.error { border: 1px solid var(--color-danger-border); }
+.patientPhoto img { border-color: var(--color-border); }
+.photoPlaceholder { color: var(--color-brand); }
+@media (max-width: 540px) { .summary > span { flex-wrap: wrap; } .summary strong { font-size: 30px; } .dialogHeader h2 { font-size: 20px; } .formGrid input, .formGrid select, .formGrid textarea { font-size: 16px; } }
+@media (prefers-reduced-motion: reduce) { .summary, .moduleGrid button { transition: none; } }

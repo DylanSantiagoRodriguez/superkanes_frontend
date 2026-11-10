@@ -91,7 +91,8 @@ module.exports = async function clinicalBrowser({ base, adminToken, user, org, r
     assert.ok(JSON.stringify(histories[0].documento).includes('#245ba6'));
     const patient=(await (await fetch(`${base}/api/v1/resources/mascota/${attentionData.mascota_id}`,{headers:{Authorization:`Bearer ${adminToken}`,'X-Organization-Id':org}})).json()).data;
     await page.getByRole('button',{name:'Mascotas y tutores',exact:true}).click();
-    await page.getByRole('button',{name:`Ver ${patient.nombre}`,exact:true}).click();
+    // Fixture patients may share a name; the patient code identifies the row.
+    await page.getByRole('row').filter({has:page.getByRole('cell',{name:patient.codigo,exact:true})}).getByRole('button',{name:`Ver ${patient.nombre}`,exact:true}).click();
     await page.getByRole('button',{name:'Abrir ficha clínica',exact:true}).click();
     await page.getByRole('button',{name:'Documentos del editor',exact:true}).click();
     const card=page.locator(`[data-document-id="${archived[0].id}"]`);

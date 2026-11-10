@@ -1,3 +1,4 @@
+import { AppIcon } from '../../shared/ui/AppIcon'
 import { Agenda } from '../clinical/Agenda'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Session } from '../auth/api/auth'
@@ -284,7 +285,7 @@ function Overview({
               key={name}
               onClick={() => navigate(group.id, name)}
             >
-              <span>{label(name)}</span>
+              <span>{label(name)}<AppIcon name={group.id} /></span>
               <strong>
                 {!result
                   ? '…'
@@ -312,7 +313,7 @@ function Overview({
           )
           .map((group) => (
             <button key={group.id} onClick={() => navigate(group.id)}>
-              <span aria-hidden="true">{group.symbol}</span>
+              <span><AppIcon name={group.id} size={24} /></span>
               <strong>{group.label}</strong>
               <small>Consultar registros →</small>
             </button>

@@ -1,3 +1,4 @@
+import styles from './PatientChart.module.css'
 import { useEffect, useState } from 'react'
 import type { JSONContent } from '@tiptap/react'
 import type { Api, Row } from '../workspace/model'
@@ -67,7 +68,7 @@ export function PatientDocuments({
     }
   }
   return (
-    <section aria-label="Documentos guardados del paciente">
+    <section className={styles.documentList} aria-label="Documentos guardados del paciente">
       <h3>Documentos de historia clínica</h3>
       <p>
         Versiones guardadas del editor, vinculadas a este paciente. Puedes abrir

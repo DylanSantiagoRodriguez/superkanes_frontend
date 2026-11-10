@@ -49,7 +49,7 @@ export function WeightHistory({ rows }: { rows: Row[] }) {
             }
             cy={155 - ((Number(row.valor) - minimum) / span) * 120}
             r="5"
-            fill="#2f6b4f"
+            fill="var(--color-primary)"
           >
             <title>
               {new Date(String(row.medida_en)).toLocaleDateString('es-CO')}:{' '}

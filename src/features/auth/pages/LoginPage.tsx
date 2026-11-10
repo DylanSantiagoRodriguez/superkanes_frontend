@@ -1,3 +1,4 @@
+import { AppIcon } from '../../../shared/ui/AppIcon'
 import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { authErrorMessage, login } from '../api/auth'
@@ -32,7 +33,7 @@ export function LoginPage({ onLogin, message }: { onLogin: (session: Session) =>
   return (
     <main className={styles.shell}>
       <section className={styles.story} aria-label="Superkanes, gestión veterinaria y peluquería">
-        <a className={styles.brand} href="/" aria-label="Superkanes, inicio"><span className={styles.brandIcon} aria-hidden="true">✳</span> superkanes<span className={styles.brandDot}>.</span></a>
+        <a className={styles.brand} href="/" aria-label="Superkanes, inicio"><span className={styles.brandIcon} aria-hidden="true"><AppIcon name="pets" size={27} /></span> superkanes<span className={styles.brandDot}>.</span></a>
         <div className={styles.storyContent}>
           <span className={styles.eyebrow}>CERCA DE QUIENES CUIDAN</span>
           <h1>Ellos ponen el amor.<br />Tú, el cuidado.<br /><em>Nosotros, el orden.</em></h1>
@@ -45,7 +46,7 @@ export function LoginPage({ onLogin, message }: { onLogin: (session: Session) =>
       <section className={styles.access} aria-labelledby="login-title">
         <span className={styles.topNote}><span aria-hidden="true">●</span> TU ESPACIO DE TRABAJO</span>
         <div className={styles.formContainer}>
-          <div className={styles.welcomeIcon} aria-hidden="true">✳</div>
+          <div className={styles.welcomeIcon} aria-hidden="true"><AppIcon name="pets" size={28} /></div>
               <p className={styles.eyebrow}>UN NUEVO DÍA PARA CUIDAR</p>
               <h2 id="login-title">Qué bueno verte de nuevo.</h2>
               <p className={styles.subtitle}>Inicia sesión para acceder a tu clínica.</p>
