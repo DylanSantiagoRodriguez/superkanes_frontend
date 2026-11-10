@@ -1,3 +1,4 @@
+import { PatientDocuments } from './PatientDocuments'
 import { canNavigate } from './use-unsaved-guard'
 import { WeightHistory } from './WeightHistory'
 import { downloadClinical } from './clinical-files-api'
@@ -27,6 +28,7 @@ const sections = [
   ['tratamientos', 'Tratamientos'],
   ['examenes', 'Exámenes'],
   ['vacunas', 'Vacunación'],
+  ['documentos_editor', 'Documentos del editor'],
   ['documentos', 'Adjuntos'],
   ['reportes', 'Documentos emitidos'],
   ['consentimientos', 'Consentimientos'],
@@ -257,6 +259,8 @@ export function PatientChart({
                 onSaved={() => setRefresh((value) => value + 1)}
               />
             </Panel>
+          ) : section === 'documentos_editor' ? (
+            <PatientDocuments key={patientId} api={api} patientId={patientId} />
           ) : section === 'resumen' ? (
             <div className={styles.grid}>
               {(

@@ -83,3 +83,12 @@ Implementación en `src/features/clinical`: `PatientChart`, `Consultation`, `Cli
 Consulta la [especificación y matriz de estado](../document-management/specs/002-flujo-clinico/spec.md) y los [contratos y migraciones del backend](../superkanes_backend/README.md#consulta-veterinaria-integrada). Las migraciones deben estar aplicadas antes de usar estas pantallas. Los botones dependen de los permisos del catálogo; la API vuelve a autorizar cada operación.
 
 La prueba `test/patient-chart-browser.cjs` usa una API y PostgreSQL efímeros con datos sintéticos. Cubre consulta, medición, renovación de sesión con notas pendientes, reintento tras pérdida de respuesta, adjunto, consentimiento, laboratorio, cierre, PDF, corrección y ancho móvil. Se ejecuta desde la suite CRUD del backend. El build conserva un aviso de tamaño del paquete principal; queda pendiente dividir la carga del editor para optimizar el arranque.
+
+
+## Documento del editor ligado al paciente
+
+**Guardar atención e historia** archiva el documento editable en MinIO y lo vincula con el ID del paciente, la atención y la revisión. Los formatos compatibles pegados desde el navegador se normalizan al guardar, conservando el texto. Un error mantiene el formulario abierto; si MinIO no está disponible, no se confirma la consulta.
+
+En **Ficha clínica → Documentos del editor** se muestran las versiones archivadas. **Ver documento guardado** recupera el archivo de MinIO y lo presenta con formato, en modo lectura. **Descargar original editable (JSON)** entrega ese mismo contenido. Las versiones de la revisión también están accesibles desde la consulta. Los PDF de historia, receta e indicaciones se siguen emitiendo al cerrar la revisión.
+
+Los documentos guardados antes de esta función permanecen accesibles en sus consultas; no se archivan retroactivamente historias cerradas. Para esta función se necesita aplicar la migración `1794321000000-clinical-document-archive` y tener permisos clínicos y de archivos. Ver [contrato y persistencia](../superkanes_backend/README.md#archivo-automático-del-documento-del-editor-en-minio).

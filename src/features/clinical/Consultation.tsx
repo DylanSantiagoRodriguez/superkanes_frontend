@@ -1,3 +1,4 @@
+import { PatientDocuments } from './PatientDocuments'
 import { useUnsavedGuard } from './use-unsaved-guard'
 import { ClinicalLaboratory } from './ClinicalLaboratory'
 import { ClinicalConsents } from './ClinicalConsents'
@@ -513,6 +514,15 @@ export function Consultation({
             disabled={dirty || busy}
             onSaved={() => setRefresh((value) => value + 1)}
           />
+          <details>
+            <summary>Versiones del documento guardadas en MinIO</summary>
+            <PatientDocuments
+              key={`${revision!.id}:${refresh}`}
+              api={api}
+              patientId={String(attention.mascota_id)}
+              revisionId={revision!.id}
+            />
+          </details>
           {revision!.documento != null && (
             <details>
               <summary>Documento clínico original con formato</summary>

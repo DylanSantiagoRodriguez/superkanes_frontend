@@ -61,7 +61,19 @@ export async function requestJson(
       typeof body.code === 'string'
         ? body.code
         : undefined
-    throw new ApiError(response.status, code)
+    const documentInvalid =
+      body &&
+      typeof body === 'object' &&
+      'message' in body &&
+      Array.isArray(body.message) &&
+      body.message.some(
+        (message) =>
+          typeof message === 'string' && message.startsWith('documento:')
+      )
+    throw new ApiError(
+      response.status,
+      documentInvalid ? 'CLINICAL_DOCUMENT_INVALID' : code
+    )
   }
   if (options.responseType === 'blob') return response.blob()
   return response.status === 204 ? undefined : response.json()
@@ -75,6 +87,10 @@ export function postJson(
 }
 export function errorMessage(error: unknown): string {
   if (error instanceof ApiError) {
+    if (error.code === 'CLINICAL_DOCUMENT_INVALID')
+      return 'El documento contiene formato no compatible o supera el tamaño permitido. Tus notas siguen en el editor; revisa el formato antes de reintentar.'
+    if (error.code === 'CLINICAL_STORAGE_UNAVAILABLE')
+      return 'No se pudo guardar el documento en MinIO. La consulta no se guardó; conserva tus notas y vuelve a intentarlo.'
     if (error.code === 'APPOINTMENT_OVERLAP')
       return 'El responsable ya tiene una cita en ese horario. Selecciona otro horario o responsable.'
     if (error.code === 'BREED_SPECIES_MISMATCH')

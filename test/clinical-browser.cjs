@@ -72,6 +72,8 @@ module.exports = async function clinicalBrowser({ base, adminToken, user, org, r
     await initialEditor.click();
     await initialEditor.press('ControlOrMeta+End');
     await initialEditor.pressSequentially('Paciente estable desde la atención.');
+    // Reproduce clipboard/browser serialization: RGB colors and empty styles.
+    await initialEditor.evaluate(element => element.editor.commands.insertContent('<p style="line-height:1.5"><span style="color:rgb(36,91,166);font-size:16px;font-family:Georgia">Texto pegado con formato desde navegador.</span></p>'));
     const savedAttention = page.waitForResponse(response => response.url().includes('/atencion_clinica/con-historia') && response.request().method() === 'POST');
     await page.getByRole('button',{name:'Guardar atención e historia',exact:true}).click();
     const attentionResponse = await savedAttention;
@@ -83,6 +85,24 @@ module.exports = async function clinicalBrowser({ base, adminToken, user, org, r
     assert.equal(histories.length,1);
     assert.equal(histories[0].motivo_consulta,'Historia desde atención en navegador');
     assert.match(JSON.stringify(histories[0].documento), /Paciente estable desde la atención/);
+    const archiveResponse=await fetch(`${base}/api/v1/storage/clinical/pacientes/${attentionData.mascota_id}/documentos?revision_id=${histories[0].id}`,{headers:{Authorization:`Bearer ${adminToken}`,'X-Organization-Id':org}});
+    assert.equal(archiveResponse.status,200);
+    const archived=(await archiveResponse.json()).data;assert.equal(archived.length,1);
+    assert.ok(JSON.stringify(histories[0].documento).includes('#245ba6'));
+    const patient=(await (await fetch(`${base}/api/v1/resources/mascota/${attentionData.mascota_id}`,{headers:{Authorization:`Bearer ${adminToken}`,'X-Organization-Id':org}})).json()).data;
+    await page.getByRole('button',{name:'Mascotas y tutores',exact:true}).click();
+    await page.getByRole('button',{name:`Ver ${patient.nombre}`,exact:true}).click();
+    await page.getByRole('button',{name:'Abrir ficha clínica',exact:true}).click();
+    await page.getByRole('button',{name:'Documentos del editor',exact:true}).click();
+    const card=page.locator(`[data-document-id="${archived[0].id}"]`);
+    await card.getByRole('button',{name:'Ver documento guardado',exact:true}).click();
+    const storedEditor=page.getByRole('textbox',{name:'Documento de historia clínica',exact:true});
+    await storedEditor.getByText('Texto pegado con formato desde navegador.',{exact:true}).waitFor();
+    assert.equal(await storedEditor.getAttribute('contenteditable'),'false');
+    const download=page.waitForEvent('download');
+    await card.getByRole('button',{name:'Descargar original editable (JSON)',exact:true}).click();
+    const file=await download;
+    assert.deepEqual(JSON.parse(require('node:fs').readFileSync(await file.path(),'utf8')),histories[0].documento);
     assert.deepEqual(errors, []);
     console.log('OK: Chromium: foto real con nombre, descarte de cambios, documento extenso, edición, guardado y reapertura.');
   } catch (error) { await page.screenshot({path:'/tmp/superkanes-browser-failure.png'}); throw error; } finally { await page.unrouteAll({behavior:'wait'}); await browser.close(); }

@@ -107,7 +107,7 @@ export function ClinicalDocument({ value, onChange, readOnly = false, disabled =
           <span className={styles.groupName}>Edición</span>
         </div>
       </div>
-      <div className={styles.saveHint}><span>Los cambios se guardan al guardar la ficha.</span>{editor.isEmpty && <button type="button" disabled={disabled} onClick={() => editor.commands.setContent(clinicalTemplate)}>Usar estructura clínica</button>}</div>
+      <div className={styles.saveHint}><span>Al guardar la ficha, el documento se archiva en MinIO y queda vinculado al paciente.</span>{editor.isEmpty && <button type="button" disabled={disabled} onClick={() => editor.commands.setContent(clinicalTemplate)}>Usar estructura clínica</button>}</div>
     </>}
     <div className={styles.canvas}>
       <div className={styles.sheetContainer} style={{ '--document-zoom': zoom / 100 } as CSSProperties}>

@@ -410,6 +410,20 @@ export function createApi(
           }
         )) as { data: { revision: Row } }
       ).data.revision,
+    patientDocuments: async (
+      id: string,
+      after?: string,
+      revisionId?: string,
+      signal?: AbortSignal
+    ) => {
+      const params = new URLSearchParams()
+      if (after) params.set('after', after)
+      if (revisionId) params.set('revision_id', revisionId)
+      return (await request(
+        `/storage/clinical/pacientes/${encodeURIComponent(id)}/documentos?${params}`,
+        { signal }
+      )) as Page
+    },
     patientSummary: async (id: string, signal?: AbortSignal) =>
       (
         (await request(
