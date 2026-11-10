@@ -1,3 +1,6 @@
+import type { ReactNode } from 'react'
+import { RecordDetails } from '../workspace/RecordDetails'
+import { PatientWeightPanel } from './PatientWeightPanel'
 import { PatientDocuments } from './PatientDocuments'
 import { canNavigate } from './use-unsaved-guard'
 import { WeightHistory } from './WeightHistory'
@@ -22,6 +25,7 @@ export interface PatientSummary {
 const sections = [
   ['resumen', 'Resumen'],
   ['historia', 'Historia clínica'],
+  ['citas', 'Citas y controles'],
   ['consultas', 'Consultas'],
   ['mediciones', 'Mediciones'],
   ['diagnosticos', 'Diagnósticos'],
@@ -62,18 +66,25 @@ export function PatientChart({
   patientId,
   catalog,
   onBack,
-  initialAppointment
+  initialAppointment,
+  profileActions,
+  backLabel = '← Volver a pacientes',
+  onPatientUpdated
 }: {
   api: Api
   patientId: string
   catalog: Resource[]
   onBack: () => void
   initialAppointment?: Row
+  profileActions?: ReactNode
+  backLabel?: string
+  onPatientUpdated?: (row: Row) => void
 }) {
   const [summary, setSummary] = useState<PatientSummary | null>(null)
   const [problem, setProblem] = useState('')
   const [refresh, setRefresh] = useState(0)
   const [section, setSection] = useState('resumen')
+  const [editingPatient, setEditingPatient] = useState(false)
   const [creating, setCreating] = useState<string | null>(null)
   const [dirty, setDirty] = useState(false)
   const [attention, setAttention] = useState<Row | null>(null)
@@ -102,7 +113,7 @@ export function PatientChart({
           if (canNavigate()) onBack()
         }}
       >
-        ← Volver a pacientes
+        {backLabel}
       </button>
       {problem && (
         <p role="alert">
@@ -155,6 +166,8 @@ export function PatientChart({
               </p>
             </div>
             <div className={styles.actions}>
+              {contract('mascota')?.permissions.update && <button onClick={() => { if(canNavigate()) setEditingPatient(true) }}>Editar</button>}
+              {profileActions && <fieldset className={styles.profileActionGroup} disabled={dirty}>{profileActions}</fieldset>}
               {contract('atencion_clinica')?.permissions.create &&
                 contract('revision_clinica')?.permissions.create &&
                 patient!.estado === 'activa' && (
@@ -187,6 +200,7 @@ export function PatientChart({
               )}
             </div>
           </header>
+          <details className={styles.profileCard}><summary>Datos completos del paciente</summary>{contract('mascota')&&<RecordDetails api={api} resource={contract('mascota')!} row={patient!}/>}</details>
           <section className={styles.alerts} aria-label="Alertas clínicas">
             <strong>Alertas y antecedentes relevantes</strong>
             {summary.overview.alertas === null ? (
@@ -236,6 +250,7 @@ export function PatientChart({
               </button>
             ))}
           </nav>
+          <div className={styles.patientColumns}><div className={styles.profileMain}>
           {attention ? (
             <Panel
               title="Consulta seleccionada"
@@ -262,43 +277,10 @@ export function PatientChart({
           ) : section === 'documentos_editor' ? (
             <PatientDocuments key={patientId} api={api} patientId={patientId} />
           ) : section === 'resumen' ? (
-            <div className={styles.grid}>
-              {(
-                [
-                  ['revisiones', 'Últimas notas clínicas'],
-                  ['vacunas', 'Últimas vacunas'],
-                  ['controles', 'Controles programados'],
-                  ['pendientes', 'Pendientes vacunales']
-                ] as const
-              ).map(([key, title]) => (
-                <Panel key={key} title={title}>
-                  {summary.overview[key] === null ? (
-                    <p>Sin permiso para consultar esta información.</p>
-                  ) : !summary.overview[key]?.data.length ? (
-                    <p>No hay registros disponibles.</p>
-                  ) : (
-                    summary.overview[key]!.data.map((row) => (
-                      <div className={styles.entry} key={row.id}>
-                        <strong>{rowLabel(row)}</strong>
-                        <p>
-                          {date(row.fecha)} · {String(row.estado ?? '')}
-                        </p>
-                        {row.motivo_consulta != null && (
-                          <p>{String(row.motivo_consulta)}</p>
-                        )}
-                      </div>
-                    ))
-                  )}
-                  <button
-                    onClick={() =>
-                      setSection(key === 'revisiones' ? 'consultas' : key)
-                    }
-                  >
-                    Consultar registros
-                  </button>
-                </Panel>
-              ))}
-            </div>
+            <section aria-label="Historial de actividad del paciente">
+              <h3>Historial de citas y atenciones</h3>
+              <PatientRecords key={`history:${refresh}`} api={api} patientId={patientId} section="historia" onAttention={setAttention} />
+            </section>
           ) : (
             <PatientRecords
               key={`${section}:${refresh}`}
@@ -308,6 +290,8 @@ export function PatientChart({
               onAttention={setAttention}
             />
           )}
+          </div><aside className={styles.profileAside}><PatientWeightPanel api={api} patientId={patientId} catalog={catalog} refresh={refresh} onSaved={() => setRefresh(n=>n+1)} appointment={initialAppointment}/></aside></div>
+          {editingPatient&&contract('mascota')&&<RecordEditor api={api} resource={contract('mascota')!} catalog={catalog} row={patient!} title="Editar paciente" onClose={()=>setEditingPatient(false)} onSaved={saved=>{setEditingPatient(false);setRefresh(n=>n+1);onPatientUpdated?.(saved)}}/>}
           {creating && contract(creating) && (
             <RecordEditor
               api={api}
@@ -442,6 +426,9 @@ function PatientRecords({
     }
   }
   const fields = [
+    'notas',
+    'inicio',
+    'fin',
     'motivo_consulta',
     'nombre_profesional',
     'nombre',
@@ -507,6 +494,7 @@ function PatientRecords({
               onChange={(e) => setQuery({ ...query, type: e.target.value })}
             >
               <option value="">Todos</option>
+              <option value="cita">Cita / control</option>
               <option value="clinica">Consulta</option>
               <option value="vacunacion">Vacunación</option>
               <option value="peluqueria">Peluquería</option>
@@ -552,11 +540,11 @@ function PatientRecords({
             </div>
             <dl>
               {fields
-                .filter((key) => row[key] != null)
+                .filter((key) => (row.registro as Row | undefined)?.[key] != null || row[key] != null)
                 .map((key) => (
                   <div key={key}>
                     <dt>{label(key)}</dt>
-                    <dd>{String(row[key])}</dd>
+                    <dd>{['inicio','fin'].includes(key) ? date((row.registro as Row | undefined)?.[key] ?? row[key]) : String((row.registro as Row | undefined)?.[key] ?? row[key])}</dd>
                   </div>
                 ))}
             </dl>

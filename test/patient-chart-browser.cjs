@@ -28,7 +28,6 @@ module.exports = async function chartBrowser({base,adminToken,renewedToken,user}
     await page.goto(origin);
     await page.getByRole('button',{name:'Mascotas y tutores',exact:true}).click();
     await page.getByRole('button',{name:'Ver Luna',exact:true}).click();
-    await page.getByRole('button',{name:'Abrir ficha clínica',exact:true}).click();
     const chart=page.getByRole('article',{name:'Ficha clínica del paciente'});
     await chart.getByRole('heading',{name:'Luna',exact:true}).waitFor();
     await chart.getByText('Tutor principal: Ana Prueba',{exact:true}).waitFor();

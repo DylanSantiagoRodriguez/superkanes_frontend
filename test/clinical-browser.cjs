@@ -27,7 +27,7 @@ module.exports = async function clinicalBrowser({ base, adminToken, user, org, r
     await page.getByRole('button',{name:'Cerrar',exact:true}).click();
     await page.getByRole('button',{name:'Seguir editando',exact:true}).waitFor();
     await page.getByRole('button',{name:'Descartar cambios',exact:true}).click();
-    await page.getByRole('button',{name:'Historia clínica',exact:true}).click();
+    await page.getByRole('navigation',{name:'Navegación principal'}).getByRole('button',{name:'Historia clínica',exact:true}).click();
     await page.getByRole('combobox',{name:'Sección',exact:true}).selectOption('revision_clinica');
     await page.getByRole('button',{name:'Ver Control',exact:true}).click();
     await page.getByRole('button',{name:'Editar',exact:true}).click();
@@ -93,7 +93,6 @@ module.exports = async function clinicalBrowser({ base, adminToken, user, org, r
     await page.getByRole('button',{name:'Mascotas y tutores',exact:true}).click();
     // Fixture patients may share a name; the patient code identifies the row.
     await page.getByRole('row').filter({has:page.getByRole('cell',{name:patient.codigo,exact:true})}).getByRole('button',{name:`Ver ${patient.nombre}`,exact:true}).click();
-    await page.getByRole('button',{name:'Abrir ficha clínica',exact:true}).click();
     await page.getByRole('button',{name:'Documentos del editor',exact:true}).click();
     const card=page.locator(`[data-document-id="${archived[0].id}"]`);
     await card.getByRole('button',{name:'Ver documento guardado',exact:true}).click();

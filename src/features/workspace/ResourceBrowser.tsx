@@ -1,13 +1,14 @@
+import { GuardianProfile } from './GuardianProfile'
+import { DetailValue, RecordDetails } from './RecordDetails'
 import { PatientChart } from '../clinical/PatientChart'
 import { AttentionHistory } from '../clinical/AttentionHistory'
 import { ClinicalDocument } from '../clinical/ClinicalDocument'
 import type { JSONContent } from '@tiptap/react'
-import { PatientPhoto } from './PatientPhoto'
 import { useEffect, useRef, useState } from 'react'
 import { errorMessage } from '../../shared/api/http'
 import { Panel } from '../../shared/ui/Panel'
 import { display, label, rowLabel } from './model'
-import type { Api, Field, Page, Resource, Row } from './model'
+import type { Api, Page, Resource, Row } from './model'
 import { RecordEditor } from './RecordEditor'
 import styles from './Workspace.module.css'
 const notices: Record<string, string> = {
@@ -32,13 +33,17 @@ const managedCreation = new Set(['archivo', 'firma_consentimiento', 'usuario'])
 export function ResourceBrowser({
   api,
   resource,
-  catalog
+  catalog,
+  initialRecord,
+  onBackProfile
 }: {
   api: Api
   resource: Resource
   catalog: Resource[]
+  initialRecord?: Row
+  onBackProfile?: () => void
 }) {
-  const [chartId, setChartId] = useState<string | null>(null)
+  const [nestedPet, setNestedPet] = useState<Row | null>(null)
   const [page, setPage] = useState<Page | null>(null)
   const [cursor, setCursor] = useState<string | undefined>()
   const [history, setHistory] = useState<(string | undefined)[]>([])
@@ -48,7 +53,7 @@ export function ResourceBrowser({
   const [loading, setLoading] = useState(true)
   const [problem, setProblem] = useState('')
   const [notice, setNotice] = useState('')
-  const [selected, setSelected] = useState<Row | null>(null)
+  const [selected, setSelected] = useState<Row | null>(initialRecord ?? null)
   const [editing, setEditing] = useState<Row | 'new' | null>(null)
   const [transferring, setTransferring] = useState<Row | null>(null)
   const [deleting, setDeleting] = useState<Row | null>(null)
@@ -97,7 +102,7 @@ export function ResourceBrowser({
       const fresh = await api.get(resource.name, row.id)
       if (mounted.current) {
         if (edit) {
-          setSelected(null)
+          if (!['mascota', 'tutor'].includes(resource.name)) setSelected(null)
           setEditing(fresh)
         } else setSelected(fresh)
       }
@@ -115,11 +120,12 @@ export function ResourceBrowser({
     setDeleting(null)
     setRevision((value) => value + 1)
   }
-  function saved() {
+  function saved(updated?: Row) {
     setTransferring(null)
     setEditing(null)
     setNotice('Cambios guardados.')
-    reload()
+    if (selected && ['mascota', 'tutor'].includes(resource.name)) { setSelected(updated ?? selected); setRevision(v => v + 1) }
+    else reload()
   }
   async function remove() {
     if (!deleting || mutationPending.current) return
@@ -201,7 +207,45 @@ export function ResourceBrowser({
           resource.deletionEffect?.[1] === 'cancelado'
         ? 'Cancelar registro'
         : 'Desactivar'
-    if (chartId) return <PatientChart api={api} patientId={chartId} catalog={catalog} onBack={() => setChartId(null)} />
+  const isProfile = Boolean(selected && ['mascota','tutor'].includes(resource.name))
+  const back = () => { if (onBackProfile) onBackProfile(); else setSelected(null) }
+  const recordActions = selected ? (          <div className={styles.actions}>
+            {canTransfer && (
+              <button
+                disabled={busy}
+                onClick={() => {
+                  setTransferring(selected!)
+                  if (!isProfile) setSelected(null)
+                }}
+              >
+                Cambiar tutor principal
+              </button>
+            )}
+            {canEdit(selected!) && resource.name !== 'mascota' && (
+              <button
+                className={styles.primary}
+                disabled={busy}
+                onClick={() => void open(selected!, true)}
+              >
+                Editar
+              </button>
+            )}
+            {resource.permissions.delete &&
+              typeof selected!.version === 'number' && (
+                <button
+                  className={styles.danger}
+                  disabled={busy}
+                  onClick={() => {
+                    setDeleting(selected)
+                    if (!isProfile) setSelected(null)
+                  }}
+                >
+                  {deletionLabel}
+                </button>
+              )}
+          </div>) : null
+  if (nestedPet) return <ResourceBrowser key={nestedPet.id} api={api} resource={catalog.find(r => r.name === 'mascota')!} catalog={catalog} initialRecord={nestedPet} onBackProfile={() => setNestedPet(null)} />
+
   return (
     <>
       {notices[resource.name] && (
@@ -217,7 +261,7 @@ export function ResourceBrowser({
           {notice}
         </p>
       )}
-      <Panel
+      {!isProfile && <Panel
         title={label(resource.name)}
         description="Registros de la organización seleccionada."
         action={
@@ -367,8 +411,9 @@ export function ResourceBrowser({
             </div>
           </>
         )}
-      </Panel>
-      {selected && (
+      </Panel>}
+      {isProfile && selected && (resource.name === 'mascota' ? <PatientChart key={`${selected.id}:${revision}`} api={api} patientId={selected.id} catalog={catalog} onBack={back} backLabel={onBackProfile ? '← Volver al tutor' : undefined} onPatientUpdated={saved} profileActions={recordActions} /> : <GuardianProfile api={api} guardian={selected} resource={resource} catalog={catalog} onBack={back} onPet={setNestedPet} actions={recordActions} />)}
+      {selected && !isProfile && (
         <dialog
           ref={detailRef}
           className={`${styles.dialog} ${['revision_clinica', 'atencion_clinica'].includes(resource.name) ? styles.documentDialog : ''}`}
@@ -380,65 +425,10 @@ export function ResourceBrowser({
             <h2 id="detail-title">{rowLabel(selected)}</h2>
             <button onClick={() => setSelected(null)}>Cerrar</button>
           </div>
-          {resource.name === 'mascota' && <button className={styles.primary} onClick={() => { setChartId(selected.id); setSelected(null) }}>Abrir ficha clínica</button>}
-          {resource.name === 'mascota' && <PatientPhoto api={api} id={String(selected.foto_archivo_id ?? '')} name={String(selected.nombre ?? '')} />}
           {resource.name === 'revision_clinica' && selected.documento != null && <ClinicalDocument readOnly value={selected.documento as JSONContent} />}
           {resource.name === 'atencion_clinica' && <AttentionHistory api={api} attention={selected} catalog={catalog} />}
-          <dl className={styles.details}>
-            {resource.fields
-              .filter(
-                (field) =>
-                  field.name in selected &&
-                  !['id', 'organizacion_id', 'version', 'documento', ...(resource.name === 'mascota' ? ['foto_archivo_id'] : [])].includes(field.name)
-              )
-              .map((field) => (
-                <div key={field.name}>
-                  <dt>{label(field.name)}</dt>
-                  <dd>
-                    <DetailValue
-                      api={api}
-                      field={field}
-                      value={selected[field.name]}
-                    />
-                  </dd>
-                </div>
-              ))}
-          </dl>
-          <div className={styles.actions}>
-            {canTransfer && (
-              <button
-                disabled={busy}
-                onClick={() => {
-                  setTransferring(selected)
-                  setSelected(null)
-                }}
-              >
-                Cambiar tutor principal
-              </button>
-            )}
-            {canEdit(selected) && (
-              <button
-                className={styles.primary}
-                disabled={busy}
-                onClick={() => void open(selected, true)}
-              >
-                Editar
-              </button>
-            )}
-            {resource.permissions.delete &&
-              typeof selected.version === 'number' && (
-                <button
-                  className={styles.danger}
-                  disabled={busy}
-                  onClick={() => {
-                    setDeleting(selected)
-                    setSelected(null)
-                  }}
-                >
-                  {deletionLabel}
-                </button>
-              )}
-          </div>
+          <RecordDetails api={api} resource={resource} row={selected} />
+          {recordActions}
         </dialog>
       )}
       {transferring && relation && (
@@ -514,34 +504,5 @@ export function ResourceBrowser({
         </dialog>
       )}
     </>
-  )
-}
-function DetailValue({
-  api,
-  field,
-  value
-}: {
-  api: Api
-  field: Field
-  value: unknown
-}) {
-  const [text, setText] = useState('Consultando…')
-  useEffect(() => {
-    let live = true
-    if (field.reference && typeof value === 'string')
-      api
-        .get(field.reference.resource, value)
-        .then((row) => {
-          if (live) setText(rowLabel(row))
-        })
-        .catch(() => {
-          if (live) setText('Registro relacionado no disponible')
-        })
-    return () => {
-      live = false
-    }
-  }, [api, field.reference, value])
-  return (
-    <>{field.reference && typeof value === 'string' ? text : display(value)}</>
   )
 }

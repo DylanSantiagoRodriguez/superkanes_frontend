@@ -331,6 +331,8 @@ export function createApi(
         `/resources/clinica/agenda?${new URLSearchParams(query)}`,
         { signal }
       )) as Page,
+    savePatientWeight: async (id: string, body: Record<string, unknown>, key: string) =>
+      ((await request(`/resources/clinica/pacientes/${encodeURIComponent(id)}/pesos`, {method:'POST',body,headers:{'Idempotency-Key':key}})) as {data:Row}).data,
     appointmentArrival: async (row: Row) =>
       (
         (await request(
