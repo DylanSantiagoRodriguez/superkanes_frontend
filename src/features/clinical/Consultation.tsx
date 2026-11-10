@@ -1,3 +1,5 @@
+import { ClinicalFiles } from './ClinicalFiles'
+import { downloadClinical } from './clinical-files-api'
 import { useEffect, useRef, useState } from 'react'
 import type { JSONContent } from '@tiptap/react'
 import { ApiError, errorMessage } from '../../shared/api/http'
@@ -102,12 +104,14 @@ export function Consultation({api,attention,catalog,onDirty}: {api: Api; attenti
           {!data.details[name]?.data.length && <p>No hay registros en esta revisión.</p>}
           {data.details[name]?.data.map(row=><div className={styles.entry} key={row.id}><strong>{name==='medicion_clinica'?`${label(String(row.tipo))}: ${row.valor} ${row.unidad}`:rowLabel(row)}</strong>
             <p>{['clasificacion','observaciones','via','frecuencia','duracion','instrucciones'].filter(k=>row[k]!=null).map(k=>String(row[k])).join(' · ')}</p>
+            {name==='adjunto_clinico' && <button onClick={()=>void downloadClinical(api,String(row.archivo_id),String(row.descripcion??'documento')).catch(cause=>setProblem(errorMessage(cause)))}>Descargar documento</button>}
             {canWrite && contract(name)?.permissions.update && <button disabled={busy||conflict} onClick={()=>setEditing({name,row})}>Editar {label(name).toLowerCase()}</button>}
           </div>)}
           {data.details[name]?.has_more && <p>Esta revisión tiene más de 1000 registros. Consulta el módulo correspondiente para revisar todos.</p>}
           {canWrite && contract(name)?.permissions.create && name!=='adjunto_clinico' && <button disabled={busy||conflict} onClick={()=>name==='prescripcion_item'?void addPrescriptionItem():setEditing({name})}>Añadir {name==='medicion_clinica'?'medición':name==='diagnostico_atencion'?'diagnóstico':'medicamento'}</button>}
         </>}
       </section>)}
+      <ClinicalFiles api={api} revision={revision!} catalog={catalog} disabled={dirty||busy} onSaved={()=>setRefresh(value=>value+1)} />
       {revision!.documento!=null && <details><summary>Documento clínico original con formato</summary><p>Se conserva como nota complementaria. Los datos estructurados se muestran arriba.</p><ClinicalDocument readOnly value={revision!.documento as JSONContent} /></details>}
       {previous && <details><summary>Comparar con la revisión anterior</summary><p>Motivo: {String(revision!.motivo_cambio)}</p><div className={styles.comparison}>{narrativeFields.map(([key,text])=><section key={key}><h4>{text}</h4><p>Anterior: {String(previous[key]??'Sin registro')}</p><p>Actual: {values[key]||'Sin registro'}</p></section>)}</div></details>}
       {revision!.estado==='cerrada' && contract('revision_clinica')?.permissions.create && <form onSubmit={e=>{e.preventDefault();void correct()}}><label>Motivo de la corrección<textarea required maxLength={4000} value={reason} onChange={e=>setReason(e.target.value)} /></label><button disabled={busy||!reason.trim()}>Crear corrección vinculada</button></form>}

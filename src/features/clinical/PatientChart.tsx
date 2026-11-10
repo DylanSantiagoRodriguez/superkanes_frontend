@@ -1,3 +1,4 @@
+import { downloadClinical } from './clinical-files-api'
 import { useEffect, useState } from 'react'
 import { ApiError, errorMessage } from '../../shared/api/http'
 import { Panel } from '../../shared/ui/Panel'
@@ -15,7 +16,7 @@ export interface PatientSummary {
 const sections = [
   ['resumen', 'Resumen'], ['historia', 'Historia clínica'], ['consultas', 'Consultas'],
   ['mediciones', 'Mediciones'], ['diagnosticos', 'Diagnósticos'], ['tratamientos', 'Tratamientos'],
-  ['vacunas', 'Vacunación'], ['documentos', 'Documentos'], ['controles', 'Controles'], ['pendientes', 'Pendientes vacunales']
+  ['vacunas', 'Vacunación'], ['documentos', 'Adjuntos'], ['reportes', 'Documentos emitidos'], ['controles', 'Controles'], ['pendientes', 'Pendientes vacunales']
 ]
 const date = (value: unknown) => value ? new Date(String(value)).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' }) : 'Sin fecha'
 function age(value: unknown) {
@@ -121,6 +122,7 @@ function PatientRecords({ api, patientId, section, onAttention }: { api: Api; pa
       <div className={styles.entryHeader}><strong>{label(String(row.tipo_evento))} · {String(row.estado ?? row.estado_revision ?? '')}</strong><time dateTime={String(row.fecha)}>{date(row.fecha)}</time></div>
       <dl>{fields.filter(key => row[key] != null).map(key => <div key={key}><dt>{label(key)}</dt><dd>{String(row[key])}</dd></div>)}</dl>
       {(section === 'consultas' || row.tipo_evento === 'clinica') && <button onClick={() => onAttention(row.registro as Row ?? row)}>Abrir consulta</button>}
+      {row.archivo_id != null && <button onClick={()=>void downloadClinical(api,String(row.archivo_id),String(row.descripcion??`${row.tipo??'documento'}.pdf`)).catch(cause=>setProblem(errorMessage(cause)))}>Descargar documento</button>}
       {row.atencion_id != null && <button onClick={async () => { try { onAttention(await api.get('atencion_clinica', String(row.atencion_id))) } catch (cause) { setProblem(errorMessage(cause)) } }}>Ver consulta de origen</button>}
     </li>)}</ol>
     {busy && <p role="status">Cargando registros…</p>}

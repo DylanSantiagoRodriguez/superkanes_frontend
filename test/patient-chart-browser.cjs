@@ -53,10 +53,23 @@ module.exports = async function chartBrowser({base,adminToken,user}) {
     assert.equal(await consultation.locator('textarea[name="plan"]').inputValue(),'Control y recomendaciones de prueba');
     await consultation.getByRole('button',{name:'Guardar consulta',exact:true}).click();
     await consultation.getByText('Consulta guardada.',{exact:true}).waitFor();
+    if(process.env.TEST_STORAGE==='true'){
+      const {PDFDocument}=require('../../superkanes_backend/node_modules/pdf-lib');
+      const pdf=await PDFDocument.create();pdf.addPage();
+      await consultation.getByLabel('Adjuntar informe o imagen',{exact:true}).setInputFiles({name:'Informe.pdf',mimeType:'application/pdf',buffer:Buffer.from(await pdf.save())});
+      await consultation.getByRole('button',{name:'Subir documento',exact:true}).click();
+      await consultation.getByText('Informe.pdf',{exact:true}).waitFor();
+    }
     await consultation.getByRole('button',{name:'Revisar y cerrar consulta',exact:true}).click();
     await consultation.getByRole('button',{name:'Confirmar cierre de consulta',exact:true}).click();
     await consultation.getByText('Consulta cerrada. El original queda protegido.',{exact:true}).waitFor();
     assert.equal(await consultation.locator('textarea[name="anamnesis"]').isDisabled(),true);
+    if(process.env.TEST_STORAGE==='true'){
+      const downloaded=page.waitForEvent('download');
+      await consultation.getByRole('button',{name:'Descargar historia de consulta PDF',exact:true}).click();
+      const file=await downloaded;assert.match(file.suggestedFilename(),/historia-.*\.pdf$/);
+      const fs=require('node:fs');assert.equal(fs.readFileSync(await file.path()).subarray(0,5).toString(),'%PDF-');
+    }
     await consultation.getByLabel('Motivo de la corrección',{exact:true}).fill('Aclaración de seguimiento');
     await consultation.getByRole('button',{name:'Crear corrección vinculada',exact:true}).click();
     await consultation.locator('textarea[name="plan"]:enabled').waitFor();

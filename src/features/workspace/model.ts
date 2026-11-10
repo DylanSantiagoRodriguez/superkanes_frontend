@@ -291,6 +291,12 @@ export function createApi(
   const base = (resource: string) =>
     `/resources/${encodeURIComponent(resource)}`
   return {
+    uploadClinical: async (row: Row, file: File, key: string) => {
+      const body = new FormData(); body.append('file', file)
+      return ((await request(`/storage/clinical/revisiones/${encodeURIComponent(row.id)}/adjuntos`, { method: 'POST', body, headers: { 'Idempotency-Key': key, 'If-Match': `"${row.version}"` } })) as { data: { revision: Row; archivo: Row; adjunto: Row } }).data
+    },
+    clinicalFile: async (id: string) => await request(`/storage/clinical/${encodeURIComponent(id)}/content`, { responseType: 'blob' }) as Blob,
+    clinicalReport: async (id: string, type: string, key: string) => ((await request(`/storage/clinical/revisiones/${encodeURIComponent(id)}/reportes/${encodeURIComponent(type)}`, { method: 'POST', headers: { 'Idempotency-Key': key } })) as { data: { report: Row; archivo: Row } }).data,
     revisionDetails: async (id: string) => ((await request(`/resources/clinica/revisiones/${encodeURIComponent(id)}`)) as { data: RevisionDetails }).data,
     saveClinical: async (row: Row, body: Record<string, unknown>, key: string) => ((await request(`/resources/clinica/revisiones/${encodeURIComponent(row.id)}/guardar`, { method: 'POST', body, headers: { 'Idempotency-Key': key, 'If-Match': `"${row.version}"` } })) as { data: { revision: Row; details: Row[] } }).data,
     correctClinical: async (row: Row, reason: string, key: string) => ((await request(`/resources/clinica/revisiones/${encodeURIComponent(row.id)}/corregir`, { method: 'POST', body: { motivo_cambio: reason }, headers: { 'Idempotency-Key': key, 'If-Match': `"${row.version}"` } })) as { data: { revision: Row } }).data.revision,
