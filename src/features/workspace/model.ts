@@ -205,6 +205,12 @@ const labels: Record<string, string> = {
   identidad_firmante_snapshot: 'Identidad al firmar',
   documento: 'Documento de historia clínica',
   foto_archivo_id: 'Foto del paciente',
+  procedimiento: 'Procedimiento',
+  alcance: 'Alcance y limitaciones de la autorización',
+  documento_archivo_id: 'Documento del consentimiento adjunto a esta atención',
+  evidencia_archivo_id: 'Evidencia escaneada adjunta a esta atención',
+  decision: 'Decisión del tutor',
+  plantilla_id: 'Plantilla publicada',
   anamnesis: 'Anamnesis',
   examen_fisico: 'Examen físico',
   numero_revision: 'Revisión de origen',
@@ -291,28 +297,171 @@ export function createApi(
   const base = (resource: string) =>
     `/resources/${encodeURIComponent(resource)}`
   return {
+    labPermissions: async () =>
+      (
+        (await request('/resources/clinica/laboratorio/permisos')) as {
+          data: Record<string, boolean>
+        }
+      ).data,
+    labOrders: async (id: string, after?: string) =>
+      (await request(
+        `/resources/clinica/laboratorio/atenciones/${encodeURIComponent(id)}/ordenes${after ? '?after=' + encodeURIComponent(after) : ''}`
+      )) as Page,
+    labCreate: async (body: Record<string, unknown>, key: string) =>
+      (
+        (await request('/resources/clinica/laboratorio/ordenes', {
+          method: 'POST',
+          body,
+          headers: { 'Idempotency-Key': key }
+        })) as { data: Row }
+      ).data,
+    labAdvance: async (row: Row, body: Record<string, unknown>, key: string) =>
+      (
+        (await request(
+          `/resources/clinica/laboratorio/ordenes/${encodeURIComponent(row.id)}/avanzar`,
+          {
+            method: 'POST',
+            body,
+            headers: { 'Idempotency-Key': key, 'If-Match': `"${row.version}"` }
+          }
+        )) as { data: Row }
+      ).data,
+    agenda: async (query: Record<string, string>, signal?: AbortSignal) =>
+      (await request(
+        `/resources/clinica/agenda?${new URLSearchParams(query)}`,
+        { signal }
+      )) as Page,
+    appointmentArrival: async (row: Row) =>
+      (
+        (await request(
+          `/resources/clinica/citas/${encodeURIComponent(row.id)}/llegada`,
+          { method: 'PATCH', headers: { 'If-Match': `"${row.version}"` } }
+        )) as { data: Row }
+      ).data,
+    respondClinicalConsent: async (
+      row: Row,
+      body: Record<string, unknown>,
+      key: string
+    ) =>
+      (
+        (await request(
+          `/resources/clinica/consentimientos/${encodeURIComponent(row.id)}/responder`,
+          {
+            method: 'POST',
+            body,
+            headers: { 'Idempotency-Key': key, 'If-Match': `"${row.version}"` }
+          }
+        )) as { data: Row }
+      ).data,
     uploadClinical: async (row: Row, file: File, key: string) => {
-      const body = new FormData(); body.append('file', file)
-      return ((await request(`/storage/clinical/revisiones/${encodeURIComponent(row.id)}/adjuntos`, { method: 'POST', body, headers: { 'Idempotency-Key': key, 'If-Match': `"${row.version}"` } })) as { data: { revision: Row; archivo: Row; adjunto: Row } }).data
+      const body = new FormData()
+      body.append('file', file)
+      return (
+        (await request(
+          `/storage/clinical/revisiones/${encodeURIComponent(row.id)}/adjuntos`,
+          {
+            method: 'POST',
+            body,
+            headers: { 'Idempotency-Key': key, 'If-Match': `"${row.version}"` }
+          }
+        )) as { data: { revision: Row; archivo: Row; adjunto: Row } }
+      ).data
     },
-    clinicalFile: async (id: string) => await request(`/storage/clinical/${encodeURIComponent(id)}/content`, { responseType: 'blob' }) as Blob,
-    clinicalReport: async (id: string, type: string, key: string) => ((await request(`/storage/clinical/revisiones/${encodeURIComponent(id)}/reportes/${encodeURIComponent(type)}`, { method: 'POST', headers: { 'Idempotency-Key': key } })) as { data: { report: Row; archivo: Row } }).data,
-    revisionDetails: async (id: string) => ((await request(`/resources/clinica/revisiones/${encodeURIComponent(id)}`)) as { data: RevisionDetails }).data,
-    saveClinical: async (row: Row, body: Record<string, unknown>, key: string) => ((await request(`/resources/clinica/revisiones/${encodeURIComponent(row.id)}/guardar`, { method: 'POST', body, headers: { 'Idempotency-Key': key, 'If-Match': `"${row.version}"` } })) as { data: { revision: Row; details: Row[] } }).data,
-    correctClinical: async (row: Row, reason: string, key: string) => ((await request(`/resources/clinica/revisiones/${encodeURIComponent(row.id)}/corregir`, { method: 'POST', body: { motivo_cambio: reason }, headers: { 'Idempotency-Key': key, 'If-Match': `"${row.version}"` } })) as { data: { revision: Row } }).data.revision,
-    patientSummary: async (id: string, signal?: AbortSignal) => ((await request(`/resources/clinica/pacientes/${encodeURIComponent(id)}`, { signal })) as { data: PatientSummary }).data,
-    patientRecords: async (id: string, section: string, query: Record<string, string> = {}, signal?: AbortSignal) => {
-      const params = new URLSearchParams(Object.entries(query).filter(([, value]) => value))
-      return await request(`/resources/clinica/pacientes/${encodeURIComponent(id)}/registros/${encodeURIComponent(section)}?${params}`, { signal }) as Page & { unavailable?: string[] }
+    clinicalFile: async (id: string) =>
+      (await request(`/storage/clinical/${encodeURIComponent(id)}/content`, {
+        responseType: 'blob'
+      })) as Blob,
+    clinicalReport: async (id: string, type: string, key: string) =>
+      (
+        (await request(
+          `/storage/clinical/revisiones/${encodeURIComponent(id)}/reportes/${encodeURIComponent(type)}`,
+          { method: 'POST', headers: { 'Idempotency-Key': key } }
+        )) as { data: { report: Row; archivo: Row } }
+      ).data,
+    revisionDetails: async (id: string) =>
+      (
+        (await request(
+          `/resources/clinica/revisiones/${encodeURIComponent(id)}`
+        )) as { data: RevisionDetails }
+      ).data,
+    saveClinical: async (
+      row: Row,
+      body: Record<string, unknown>,
+      key: string
+    ) =>
+      (
+        (await request(
+          `/resources/clinica/revisiones/${encodeURIComponent(row.id)}/guardar`,
+          {
+            method: 'POST',
+            body,
+            headers: { 'Idempotency-Key': key, 'If-Match': `"${row.version}"` }
+          }
+        )) as { data: { revision: Row; details: Row[] } }
+      ).data,
+    correctClinical: async (row: Row, reason: string, key: string) =>
+      (
+        (await request(
+          `/resources/clinica/revisiones/${encodeURIComponent(row.id)}/corregir`,
+          {
+            method: 'POST',
+            body: { motivo_cambio: reason },
+            headers: { 'Idempotency-Key': key, 'If-Match': `"${row.version}"` }
+          }
+        )) as { data: { revision: Row } }
+      ).data.revision,
+    patientSummary: async (id: string, signal?: AbortSignal) =>
+      (
+        (await request(
+          `/resources/clinica/pacientes/${encodeURIComponent(id)}`,
+          { signal }
+        )) as { data: PatientSummary }
+      ).data,
+    patientRecords: async (
+      id: string,
+      section: string,
+      query: Record<string, string> = {},
+      signal?: AbortSignal
+    ) => {
+      const params = new URLSearchParams(
+        Object.entries(query).filter(([, value]) => value)
+      )
+      return (await request(
+        `/resources/clinica/pacientes/${encodeURIComponent(id)}/registros/${encodeURIComponent(section)}?${params}`,
+        { signal }
+      )) as Page & { unavailable?: string[] }
     },
-    clinicalAuthor: async () => ((await request('/resources/atencion_clinica/autor')) as { data: Row | null }).data,
-    createAttentionWithHistory: async (body: Record<string, unknown>, key: string) =>
-      ((await request('/resources/atencion_clinica/con-historia', { method: 'POST', body, headers: { 'Idempotency-Key': key } })) as { data: Row }).data,
-    photo: async (id: string) => await request(`/storage/${encodeURIComponent(id)}/content`, { responseType: 'blob' }) as Blob,
+    clinicalAuthor: async () =>
+      (
+        (await request('/resources/atencion_clinica/autor')) as {
+          data: Row | null
+        }
+      ).data,
+    createAttentionWithHistory: async (
+      body: Record<string, unknown>,
+      key: string
+    ) =>
+      (
+        (await request('/resources/atencion_clinica/con-historia', {
+          method: 'POST',
+          body,
+          headers: { 'Idempotency-Key': key }
+        })) as { data: Row }
+      ).data,
+    photo: async (id: string) =>
+      (await request(`/storage/${encodeURIComponent(id)}/content`, {
+        responseType: 'blob'
+      })) as Blob,
     uploadPhoto: async (file: File, key: string) => {
       const body = new FormData()
       body.append('file', file)
-      return ((await request('/storage/photos', { method: 'POST', body, headers: { 'Idempotency-Key': key } })) as { data: Row }).data
+      return (
+        (await request('/storage/photos', {
+          method: 'POST',
+          body,
+          headers: { 'Idempotency-Key': key }
+        })) as { data: Row }
+      ).data
     },
     catalog: async () =>
       ((await request('/resources')) as { resources: Resource[] }).resources,

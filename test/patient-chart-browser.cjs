@@ -60,6 +60,43 @@ module.exports = async function chartBrowser({base,adminToken,user}) {
       await consultation.getByRole('button',{name:'Subir documento',exact:true}).click();
       await consultation.getByText('Informe.pdf',{exact:true}).waitFor();
     }
+
+    const laboratory=consultation.getByRole('region',{name:'Laboratorio de la consulta'});
+    await laboratory.getByRole('button',{name:'Solicitar exámenes',exact:true}).click();
+    await laboratory.getByLabel('Laboratorio',{exact:true}).selectOption({index:1});
+    await laboratory.getByLabel('Exámenes solicitados',{exact:true}).fill('Examen solicitado desde consulta');
+    await laboratory.getByLabel('Indicación clínica',{exact:true}).fill('Indicación de prueba');
+    await laboratory.getByRole('button',{name:'Guardar laboratorio',exact:true}).click();
+    await laboratory.getByRole('button',{name:'Registrar muestra',exact:true}).click();
+    await laboratory.getByLabel('Identificación y tipo de muestra',{exact:true}).fill('Muestra identificada');
+    await laboratory.getByRole('button',{name:'Guardar laboratorio',exact:true}).click();
+    await laboratory.getByRole('button',{name:'Registrar procesamiento',exact:true}).click();
+    await laboratory.getByRole('button',{name:'Guardar laboratorio',exact:true}).click();
+    await laboratory.getByRole('button',{name:'Registrar resultado',exact:true}).click();
+    await laboratory.getByLabel('Resultado informado',{exact:true}).fill('Resultado de prueba');
+    await laboratory.getByRole('button',{name:'Guardar laboratorio',exact:true}).click();
+    await laboratory.getByRole('button',{name:'Registrar interpretación',exact:true}).click();
+    await laboratory.getByLabel('Interpretación del profesional',{exact:true}).fill('Interpretación clínica de prueba');
+    await laboratory.getByRole('button',{name:'Guardar laboratorio',exact:true}).click();
+    await laboratory.getByRole('button',{name:'Documentar comunicación',exact:true}).click();
+    await laboratory.getByLabel('Contacto realizado e indicaciones comunicadas',{exact:true}).fill('Se documenta contacto presencial de prueba');
+    await laboratory.getByRole('button',{name:'Guardar laboratorio',exact:true}).click();
+    await laboratory.getByText('Contacto documentado: Se documenta contacto presencial de prueba',{exact:true}).waitFor();
+    if(process.env.TEST_STORAGE==='true'){
+      const consents=consultation.getByRole('region',{name:'Consentimientos clínicos'});
+      await consents.getByRole('button',{name:'Emitir consentimiento clínico',exact:true}).click();
+      await page.locator('#field-plantilla_id option').nth(1).waitFor({state:'attached'});
+      await page.locator('#field-plantilla_id').selectOption({index:1});
+      await page.locator('#field-documento_archivo_id').selectOption({index:1});
+      await page.locator('#field-procedimiento').fill('Procedimiento consentido de prueba');
+      await page.getByRole('button',{name:'Guardar',exact:true}).click();
+      await consents.getByRole('button',{name:'Registrar aceptación o rechazo',exact:true}).click();
+      await page.locator('#field-tutor_id option').nth(1).waitFor({state:'attached'});
+      await page.locator('#field-tutor_id').selectOption({label:'Ana Prueba'});
+      await page.locator('#field-evidencia_archivo_id').selectOption({index:1});
+      await page.getByRole('button',{name:'Guardar',exact:true}).click();
+      await consents.getByRole('heading',{name:'Procedimiento consentido de prueba · aceptado',exact:true}).waitFor();
+    }
     await consultation.getByRole('button',{name:'Revisar y cerrar consulta',exact:true}).click();
     await consultation.getByRole('button',{name:'Confirmar cierre de consulta',exact:true}).click();
     await consultation.getByText('Consulta cerrada. El original queda protegido.',{exact:true}).waitFor();

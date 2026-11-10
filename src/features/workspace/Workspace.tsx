@@ -1,3 +1,4 @@
+import { Agenda } from '../clinical/Agenda'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Session } from '../auth/api/auth'
 import { requestJson, errorMessage } from '../../shared/api/http'
@@ -221,12 +222,12 @@ function OrganizationWorkspace({
                 ))}
               </select>
             </label>
-            <ResourceBrowser
+            {resource.name === 'cita' ? <Agenda api={api} catalog={resources} /> : <ResourceBrowser
               key={resource.name}
               api={api}
               resource={resource}
               catalog={resources}
-            />
+            />}
           </>
         ) : (
           <p>No tienes acceso a los registros de esta sección.</p>
