@@ -1,3 +1,9 @@
+import type {
+  ManagedUser,
+  OrganizationOption,
+  ManagedUserInput,
+  AccessInput
+} from './user-management'
 import type { CalendarPage } from '../calendar/calendar'
 import { catalogNames } from './catalogs'
 import type { RevisionDetails } from '../clinical/Consultation'
@@ -35,10 +41,12 @@ export interface Profile {
   id: string
   nombre: string
   email: string
+  platformAdmin?: boolean
   organizations: Organization[]
 }
 export const groups = [
   { id: 'overview', label: 'Resumen', symbol: '◫', resources: [] },
+  { id: 'users', label: 'Usuarios y accesos', symbol: '♙', resources: [] },
   {
     id: 'agenda',
     label: 'Agenda',
@@ -296,6 +304,41 @@ export function createApi(
   const base = (resource: string) =>
     `/resources/${encodeURIComponent(resource)}`
   return {
+    manageUsers: async (query: Record<string, string>, signal?: AbortSignal) =>
+      (await request(`/auth/admin/users?${new URLSearchParams(query)}`, {
+        signal
+      })) as { data: ManagedUser[]; page: { next: string | null } },
+    manageOrganizations: async (
+      query: Record<string, string>,
+      signal?: AbortSignal
+    ) =>
+      (await request(
+        `/auth/admin/organizations?${new URLSearchParams(query)}`,
+        { signal }
+      )) as { data: OrganizationOption[]; page: { next: string | null } },
+    manageCreateUser: async (body: ManagedUserInput, key: string) =>
+      (
+        (await request('/auth/admin/users', {
+          method: 'POST',
+          body,
+          headers: { 'Idempotency-Key': key }
+        })) as { data: { user: ManagedUser } }
+      ).data,
+    manageLinkUser: async (
+      id: string,
+      organizaciones: AccessInput[],
+      key: string
+    ) =>
+      (
+        (await request(
+          `/auth/admin/users/${encodeURIComponent(id)}/organizations`,
+          {
+            method: 'POST',
+            body: { organizaciones },
+            headers: { 'Idempotency-Key': key }
+          }
+        )) as { data: { user: ManagedUser } }
+      ).data,
     labPermissions: async () =>
       (
         (await request('/resources/clinica/laboratorio/permisos')) as {
@@ -326,7 +369,10 @@ export function createApi(
         )) as { data: Row }
       ).data,
     calendar: async (query: Record<string, string>, signal?: AbortSignal) =>
-      (await request(`/resources/clinica/calendario?${new URLSearchParams(query)}`, { signal })) as CalendarPage,
+      (await request(
+        `/resources/clinica/calendario?${new URLSearchParams(query)}`,
+        { signal }
+      )) as CalendarPage,
     agenda: async (query: Record<string, string>, signal?: AbortSignal) =>
       (await request(
         `/resources/clinica/agenda?${new URLSearchParams(query)}`,

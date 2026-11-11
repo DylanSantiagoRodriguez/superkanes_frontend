@@ -9,6 +9,12 @@ const icons: Record<string, ReactNode> = {
       <rect x="14" y="14" width="7" height="7" rx="2" />
     </>
   ),
+  users: (
+    <>
+      <circle cx="9" cy="8" r="3" />
+      <path d="M3 21v-2a6 6 0 0 1 12 0v2M16 4a4 4 0 0 1 0 8m1 3a5 5 0 0 1 4 5" />
+    </>
+  ),
   guardian: (
     <>
       <circle cx="12" cy="8" r="4" />

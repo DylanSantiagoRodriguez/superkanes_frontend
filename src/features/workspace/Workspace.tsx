@@ -1,3 +1,4 @@
+import { UserManagement } from './UserManagement'
 import { DashboardCalendar } from '../calendar/DashboardCalendar'
 import { CatalogWorkspace } from './CatalogWorkspace'
 import { AppIcon } from '../../shared/ui/AppIcon'
@@ -100,6 +101,8 @@ export function Workspace({
       organization={organization}
       selector={selector}
       userName={profile.nombre}
+      platformAdmin={!!profile.platformAdmin}
+      onAccessChanged={() => setRetry((v) => v + 1)}
       onLogout={() => {
         if (
           document.dispatchEvent(
@@ -119,6 +122,8 @@ function OrganizationWorkspace({
   organization,
   selector,
   userName,
+  platformAdmin,
+  onAccessChanged,
   onLogout,
   logoutBusy,
   error,
@@ -128,6 +133,8 @@ function OrganizationWorkspace({
   organization: string
   selector: React.ReactNode
   userName: string
+  platformAdmin: boolean
+  onAccessChanged: () => void
   onLogout: () => void
   logoutBusy: boolean
   error: string
@@ -171,6 +178,7 @@ function OrganizationWorkspace({
   const available = groups.filter(
     (group) =>
       group.id === 'overview' ||
+      (group.id === 'users' && platformAdmin) ||
       group.resources.some((name) => resources.some((r) => r.name === name))
   )
   const group = available.find((item) => item.id === active) ?? available[0]
@@ -229,7 +237,13 @@ function OrganizationWorkspace({
           )}
         </div>
       )}
-      {!organization ? (
+      {group.id === 'users' && platformAdmin ? (
+        <UserManagement
+          api={api}
+          currentUserId={session.userId}
+          onAccessChanged={onAccessChanged}
+        />
+      ) : !organization ? (
         <p>No tienes una organización activa. Contacta al administrador.</p>
       ) : !loaded ? (
         <p role="status">Cargando permisos y módulos…</p>
@@ -270,7 +284,13 @@ function OrganizationWorkspace({
                 ))}
               </select>
             </label>
-            {resource.name === 'cita' ? (
+            {resource.name === 'usuario' && platformAdmin ? (
+              <UserManagement
+                api={api}
+                currentUserId={session.userId}
+                onAccessChanged={onAccessChanged}
+              />
+            ) : resource.name === 'cita' ? (
               <Agenda api={api} catalog={resources} />
             ) : (
               <ResourceBrowser
@@ -359,7 +379,20 @@ function Overview({
           )
         })}
       </div>
-      {resources.some(r => ['cita', 'pendiente_vacunal', 'servicio_peluqueria', 'recordatorio'].includes(r.name)) && <DashboardCalendar api={api} catalog={resources} onChange={() => setCalendarRefresh(v => v + 1)} />}
+      {resources.some((r) =>
+        [
+          'cita',
+          'pendiente_vacunal',
+          'servicio_peluqueria',
+          'recordatorio'
+        ].includes(r.name)
+      ) && (
+        <DashboardCalendar
+          api={api}
+          catalog={resources}
+          onChange={() => setCalendarRefresh((v) => v + 1)}
+        />
+      )}
       <div className={styles.moduleGrid}>
         {groups
           .filter(
