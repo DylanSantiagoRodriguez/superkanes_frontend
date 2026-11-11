@@ -1,0 +1,30 @@
+.workspace { display: grid; gap: 26px; min-width: 0; }
+.intro { display: flex; gap: 18px; align-items: center; padding: 24px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: linear-gradient(115deg, var(--surface), var(--surface-sidebar)); }
+.introIcon { display: grid; place-items: center; width: 56px; height: 56px; flex-shrink: 0; border-radius: 16px; background: var(--color-primary-soft); color: var(--color-primary); }
+.intro h2 { margin: 0 0 6px; font-size: 21px; letter-spacing: -.5px; }
+.intro p { margin: 0; font-size: 13px; color: var(--color-muted); }
+.intro button { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.filters, .detailToolbar { display: flex; gap: 16px; align-items: end; flex-wrap: wrap; }
+.filters label, .detailToolbar label { display: grid; gap: 7px; min-width: 0; font-size: 12px; color: var(--color-muted); }
+.filters label:first-child { flex: 1 1 300px; }
+.filters label:last-child { flex: 0 1 270px; }
+.filters input, .filters select, .detailToolbar select { width: 100%; font-size: 14px; }
+.category h3 { display: flex; gap: 10px; align-items: center; font-size: 15px; margin: 0 0 14px; }
+.category h3 svg { color: var(--color-primary); }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(290px, 100%), 1fr)); gap: 16px; }
+.card { display: flex; flex-direction: column; gap: 15px; padding: 22px; min-width: 0; text-align: left; background: var(--surface); border: 1px solid var(--color-border); border-radius: var(--radius); box-shadow: var(--shadow-card); transition: transform .16s, border-color .16s, box-shadow .16s; }
+.cardTop { display: flex; align-items: start; gap: 12px; justify-content: space-between; flex-wrap: wrap; }
+.card strong { color: var(--color-text); font-size: 15px; }
+.mode { font-size: 10px; padding: 3px 7px; border-radius: 5px; color: var(--color-brand); background: var(--color-primary-soft); font-weight: 500; }
+.description { color: var(--color-muted); font-size: 13px; line-height: 1.6; font-weight: 400; }
+.cardFoot { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid var(--color-divider); margin-top: auto; padding-top: 14px; font-size: 12px; }
+.card:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 3px; }
+@media(hover: hover) { .card:hover { transform: translateY(-3px); background: var(--surface); border-color: var(--color-primary-border); box-shadow: var(--shadow-hover); } }
+.detailToolbar { justify-content: space-between; align-items: center; }
+.detailToolbar label { width: min(100%, 350px); }
+.detailIntro h2 { font-size: 23px; margin: 0 0 8px; }
+.detailIntro p { margin: 8px 0 0; font-size: 13px; color: var(--color-muted); }
+.textButton { display: block; margin-top: 8px; padding: 0; background: transparent; border: 0; font-size: 12px; }
+.empty { text-align: center; padding: 32px; color: var(--color-muted); background: var(--surface); border: 1px dashed var(--color-border); border-radius: var(--radius); font-size: 14px; }
+@media(max-width: 720px) { .intro { flex-wrap: wrap; padding: 20px; } .intro > div:nth-child(2) { flex: 1 1 180px; } .intro button { margin-left: 0; } .filters label:last-child { flex: 1 1 270px; } .card { padding: 18px; } }
+@media(prefers-reduced-motion: reduce) { .card { transition: none; } .card:hover { transform: none; } }

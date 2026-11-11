@@ -9,6 +9,16 @@ import { ApiError, errorMessage } from '../../shared/api/http'
 import { display, label, rowLabel } from './model'
 import type { Api, Field, Resource, Row } from './model'
 import styles from './Workspace.module.css'
+async function namedReferences(api: Api, target: string, rows: Row[], catalog: Resource[]) {
+  if (target !== 'membresia' || !catalog.some(resource => resource.name === 'usuario')) return rows
+  return Promise.all(rows.map(async row => {
+    if (typeof row.usuario_id !== 'string') return row
+    try {
+      const user = await api.get('usuario', row.usuario_id)
+      return { ...row, nombre: `${rowLabel(user)}${user.email ? ` · ${String(user.email)}` : ''}` }
+    } catch { return row } // The relationship remains selectable if its user label is unavailable.
+  }))
+}
 function inputValue(field: Field, value: unknown): string {
   if (value === null || value === undefined) return ''
   if (field.type === 'jsonb') return JSON.stringify(value, null, 2)
@@ -144,6 +154,7 @@ export function RecordEditor({
       if (!catalog.some((r) => r.name === target)) continue
       api
         .list(target)
+        .then(async result => ({ ...result, data: await namedReferences(api, target, result.data, catalog) }))
         .then((result) => {
           if (live)
             setLinks((current) => ({
@@ -183,11 +194,12 @@ export function RecordEditor({
     setLinks((value) => ({ ...value, [key]: { ...current, loading: true } }))
     try {
       const result = await api.list(target, current.next, isPet && target === 'raza' ? { especie_id: species } : undefined)
+      const rows = await namedReferences(api, target, result.data, catalog)
       if (mounted.current)
         setLinks((value) => ({
           ...value,
           [key]: {
-            rows: [...current.rows, ...result.data],
+            rows: [...current.rows, ...rows],
             next: result.page.next
           }
         }))

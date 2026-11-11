@@ -1,3 +1,4 @@
+import { catalogNames } from './catalogs'
 import type { RevisionDetails } from '../clinical/Consultation'
 import type { PatientSummary } from '../clinical/PatientChart'
 import { requestJson } from '../../shared/api/http'
@@ -96,29 +97,23 @@ export const groups = [
     resources: ['reporte_emitido', 'evento_auditoria', 'evento_salida']
   },
   {
+    id: 'catalogs',
+    label: 'Catálogos',
+    symbol: '▧',
+    resources: [...catalogNames, 'cita']
+  },
+  {
     id: 'settings',
     label: 'Configuración',
     symbol: '⚙',
     resources: [
       'organizacion',
-      'sede',
       'usuario',
       'membresia',
-      'profesional',
       'rol',
       'permiso',
       'rol_permiso',
       'asignacion_rol',
-      'especie',
-      'raza',
-      'laboratorio',
-      'medicamento',
-      'vacuna',
-      'tipo_servicio',
-      'tipo_seccion_clinica',
-      'plantilla_seccion',
-      'diagnostico',
-      'plantilla_consentimiento',
       'archivo'
     ]
   }
@@ -197,6 +192,9 @@ const labels: Record<string, string> = {
   especie_id: 'Especie',
   raza_id: 'Raza',
   profesional_id: 'Profesional',
+  membresia_id: 'Miembro del equipo',
+  nombre_profesional: 'Nombre del profesional',
+  especialidad: 'Especialidad',
   responsable_id: 'Responsable del equipo',
   aplicada_por: 'Profesional que aplicó la vacuna',
   creado_en: 'Fecha de creación',
@@ -331,8 +329,17 @@ export function createApi(
         `/resources/clinica/agenda?${new URLSearchParams(query)}`,
         { signal }
       )) as Page,
-    savePatientWeight: async (id: string, body: Record<string, unknown>, key: string) =>
-      ((await request(`/resources/clinica/pacientes/${encodeURIComponent(id)}/pesos`, {method:'POST',body,headers:{'Idempotency-Key':key}})) as {data:Row}).data,
+    savePatientWeight: async (
+      id: string,
+      body: Record<string, unknown>,
+      key: string
+    ) =>
+      (
+        (await request(
+          `/resources/clinica/pacientes/${encodeURIComponent(id)}/pesos`,
+          { method: 'POST', body, headers: { 'Idempotency-Key': key } }
+        )) as { data: Row }
+      ).data,
     appointmentArrival: async (row: Row) =>
       (
         (await request(
@@ -492,7 +499,12 @@ export function createApi(
       if (filter) params.set('filter', JSON.stringify(filter))
       return (await request(`${base(resource)}?${params}`, { signal })) as Page
     },
-    searchRelations: async (resource: string, search: string, after?: string, signal?: AbortSignal) => {
+    searchRelations: async (
+      resource: string,
+      search: string,
+      after?: string,
+      signal?: AbortSignal
+    ) => {
       const params = new URLSearchParams({ limit: '25', search })
       if (after) params.set('after', after)
       return (await request(`${base(resource)}?${params}`, { signal })) as Page

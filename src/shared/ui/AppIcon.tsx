@@ -1,6 +1,14 @@
 import type { ReactNode } from 'react'
 
 const icons: Record<string, ReactNode> = {
+  catalogs: (
+    <>
+      <rect x="3" y="3" width="7" height="7" rx="2" />
+      <rect x="14" y="3" width="7" height="7" rx="2" />
+      <rect x="3" y="14" width="7" height="7" rx="2" />
+      <rect x="14" y="14" width="7" height="7" rx="2" />
+    </>
+  ),
   guardian: (
     <>
       <circle cx="12" cy="8" r="4" />

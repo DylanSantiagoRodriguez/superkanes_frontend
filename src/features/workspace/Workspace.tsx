@@ -1,3 +1,4 @@
+import { CatalogWorkspace } from './CatalogWorkspace'
 import { AppIcon } from '../../shared/ui/AppIcon'
 import { Agenda } from '../clinical/Agenda'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -74,7 +75,14 @@ export function Workspace({
       <select
         aria-label="Organización"
         value={organization}
-        onChange={(event) => { if (document.dispatchEvent(new Event('superkanes:before-navigation', { cancelable: true }))) setOrganization(event.target.value) }}
+        onChange={(event) => {
+          if (
+            document.dispatchEvent(
+              new Event('superkanes:before-navigation', { cancelable: true })
+            )
+          )
+            setOrganization(event.target.value)
+        }}
       >
         {profile.organizations.map((org) => (
           <option key={org.id} value={org.id}>
@@ -91,7 +99,14 @@ export function Workspace({
       organization={organization}
       selector={selector}
       userName={profile.nombre}
-      onLogout={() => { if (document.dispatchEvent(new Event('superkanes:before-navigation', { cancelable: true }))) onLogout() }}
+      onLogout={() => {
+        if (
+          document.dispatchEvent(
+            new Event('superkanes:before-navigation', { cancelable: true })
+          )
+        )
+          onLogout()
+      }}
       logoutBusy={logoutBusy}
       error={error || problem}
       onExpired={expired}
@@ -164,7 +179,12 @@ function OrganizationWorkspace({
   })
   const resource = options.find((r) => r.name === selected) ?? options[0]
   function navigate(id: string, name = '') {
-    if (!document.dispatchEvent(new Event('superkanes:before-navigation', { cancelable: true }))) return
+    if (
+      !document.dispatchEvent(
+        new Event('superkanes:before-navigation', { cancelable: true })
+      )
+    )
+      return
     setActive(id)
     setSelected(name)
   }
@@ -173,7 +193,14 @@ function OrganizationWorkspace({
       items={available}
       active={group.id}
       onNavigate={navigate}
-      onLogout={() => { if (document.dispatchEvent(new Event('superkanes:before-navigation', { cancelable: true }))) onLogout() }}
+      onLogout={() => {
+        if (
+          document.dispatchEvent(
+            new Event('superkanes:before-navigation', { cancelable: true })
+          )
+        )
+          onLogout()
+      }}
       logoutBusy={logoutBusy}
       organizationControl={selector}
       userName={userName}
@@ -186,7 +213,9 @@ function OrganizationWorkspace({
         <p>
           {group.id === 'overview'
             ? 'Información de tu organización y accesos a cada área de atención.'
-            : 'Consulta y gestiona los registros de tu organización.'}
+            : group.id === 'catalogs'
+              ? 'Datos compartidos para preparar citas, historias clínicas y servicios.'
+              : 'Consulta y gestiona los registros de tu organización.'}
         </p>
       </div>
       {(error || problem) && (
@@ -207,6 +236,14 @@ function OrganizationWorkspace({
         !problem &&
         (group.id === 'overview' ? (
           <Overview api={api} resources={resources} navigate={navigate} />
+        ) : group.id === 'catalogs' ? (
+          <CatalogWorkspace
+            api={api}
+            catalog={resources}
+            selected={selected}
+            onSelect={(name) => navigate('catalogs', name)}
+            onNavigate={navigate}
+          />
         ) : resource ? (
           <>
             <label className={styles.resourceSelect}>
@@ -214,7 +251,16 @@ function OrganizationWorkspace({
               <select
                 aria-label="Sección"
                 value={resource.name}
-                onChange={(event) => { if (document.dispatchEvent(new Event('superkanes:before-navigation', { cancelable: true }))) setSelected(event.target.value) }}
+                onChange={(event) => {
+                  if (
+                    document.dispatchEvent(
+                      new Event('superkanes:before-navigation', {
+                        cancelable: true
+                      })
+                    )
+                  )
+                    setSelected(event.target.value)
+                }}
               >
                 {options.map((r) => (
                   <option key={r.name} value={r.name}>
@@ -223,12 +269,16 @@ function OrganizationWorkspace({
                 ))}
               </select>
             </label>
-            {resource.name === 'cita' ? <Agenda api={api} catalog={resources} /> : <ResourceBrowser
-              key={resource.name}
-              api={api}
-              resource={resource}
-              catalog={resources}
-            />}
+            {resource.name === 'cita' ? (
+              <Agenda api={api} catalog={resources} />
+            ) : (
+              <ResourceBrowser
+                key={resource.name}
+                api={api}
+                resource={resource}
+                catalog={resources}
+              />
+            )}
           </>
         ) : (
           <p>No tienes acceso a los registros de esta sección.</p>
@@ -285,7 +335,10 @@ function Overview({
               key={name}
               onClick={() => navigate(group.id, name)}
             >
-              <span>{label(name)}<AppIcon name={group.id} /></span>
+              <span>
+                {label(name)}
+                <AppIcon name={group.id} />
+              </span>
               <strong>
                 {!result
                   ? '…'
@@ -313,7 +366,9 @@ function Overview({
           )
           .map((group) => (
             <button key={group.id} onClick={() => navigate(group.id)}>
-              <span><AppIcon name={group.id} size={24} /></span>
+              <span>
+                <AppIcon name={group.id} size={24} />
+              </span>
               <strong>{group.label}</strong>
               <small>Consultar registros →</small>
             </button>
