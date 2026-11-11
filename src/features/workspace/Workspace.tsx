@@ -1,3 +1,4 @@
+import { DashboardCalendar } from '../calendar/DashboardCalendar'
 import { CatalogWorkspace } from './CatalogWorkspace'
 import { AppIcon } from '../../shared/ui/AppIcon'
 import { Agenda } from '../clinical/Agenda'
@@ -302,6 +303,7 @@ function Overview({
   const names = ['cita', 'mascota', 'tutor', 'pendiente_vacunal'].filter(
     (name) => resources.some((r) => r.name === name)
   )
+  const [calendarRefresh, setCalendarRefresh] = useState(0)
   const signature = names.join(',')
   const [summaries, setSummaries] = useState<Record<string, Page | string>>({})
   useEffect(() => {
@@ -322,7 +324,7 @@ function Overview({
         })
     }
     return () => controller.abort()
-  }, [api, signature])
+  }, [api, signature, calendarRefresh])
   return (
     <>
       <div className={styles.summaryGrid}>
@@ -357,6 +359,7 @@ function Overview({
           )
         })}
       </div>
+      {resources.some(r => ['cita', 'pendiente_vacunal', 'servicio_peluqueria', 'recordatorio'].includes(r.name)) && <DashboardCalendar api={api} catalog={resources} onChange={() => setCalendarRefresh(v => v + 1)} />}
       <div className={styles.moduleGrid}>
         {groups
           .filter(

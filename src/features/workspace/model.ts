@@ -1,3 +1,4 @@
+import type { CalendarPage } from '../calendar/calendar'
 import { catalogNames } from './catalogs'
 import type { RevisionDetails } from '../clinical/Consultation'
 import type { PatientSummary } from '../clinical/PatientChart'
@@ -324,6 +325,8 @@ export function createApi(
           }
         )) as { data: Row }
       ).data,
+    calendar: async (query: Record<string, string>, signal?: AbortSignal) =>
+      (await request(`/resources/clinica/calendario?${new URLSearchParams(query)}`, { signal })) as CalendarPage,
     agenda: async (query: Record<string, string>, signal?: AbortSignal) =>
       (await request(
         `/resources/clinica/agenda?${new URLSearchParams(query)}`,

@@ -21,6 +21,9 @@ async function namedReferences(api: Api, target: string, rows: Row[], catalog: R
 }
 function inputValue(field: Field, value: unknown): string {
   if (value === null || value === undefined) return ''
+  // DATE fields can arrive as ISO timestamps from the raw PostgreSQL reader.
+  // Preserve the calendar date; applying a timezone would move it to yesterday.
+  if (field.type === 'date') return String(value).slice(0, 10)
   if (field.type === 'jsonb') return JSON.stringify(value, null, 2)
   if (field.type === 'timestamptz') {
     const date = new Date(String(value))
