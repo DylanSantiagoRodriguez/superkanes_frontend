@@ -10,7 +10,8 @@ function optionLabel(row: Row, target: string) {
 }
 
 /** A native, keyboard-accessible selector backed by paginated server search. */
-export function RelationPicker({ api, target, id, name, value, required, onChange, onCreate }: {
+export function RelationPicker({ api, target, id, name, value, required, onChange, onCreate, linkedTo }: {
+  linkedTo?: string
   api: Api
   target: string
   id: string
@@ -42,7 +43,7 @@ export function RelationPicker({ api, target, id, name, value, required, onChang
       setRows([])
       setNext(null)
       setProblem('')
-      api.searchRelations(target, query.trim(), undefined, active.controller.signal)
+      api.searchRelations(target, query.trim(), undefined, active.controller.signal, linkedTo)
         .then(page => {
           if (active.controller.signal.aborted) return
           page.data.forEach(row => cache.current.set(row.id, row))
@@ -53,7 +54,7 @@ export function RelationPicker({ api, target, id, name, value, required, onChang
         .finally(() => { if (!active.controller.signal.aborted) setLoading(false) })
     }, query ? 250 : 0)
     return () => { window.clearTimeout(timer); active.controller.abort() }
-  }, [api, target, query, retry])
+  }, [api, target, query, retry, linkedTo])
   useEffect(() => {
     let live = true
     if (value) {
@@ -70,7 +71,7 @@ export function RelationPicker({ api, target, id, name, value, required, onChang
     setPaging(true)
     setProblem('')
     try {
-      const page = await api.searchRelations(target, query.trim(), next, active.controller.signal)
+      const page = await api.searchRelations(target, query.trim(), next, active.controller.signal, linkedTo)
       if (active.controller.signal.aborted) return
       page.data.forEach(row => cache.current.set(row.id, row))
       setRows(current => [...new Map([...current, ...page.data].map(row => [row.id, row])).values()])

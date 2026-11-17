@@ -83,9 +83,9 @@ export function RecordEditor({
 }) {
   const [creatingRelation, setCreatingRelation] = useState<{ field: Field; resource: Resource } | null>(null)
   const editorId = depth ? `editor-title-${depth}` : 'editor-title'
-  const autoContact = useRef('')
   const selectionRequest = useRef(0)
   const isPet = resource.name === 'mascota'
+  const paired = resource.fields.some(f => f.name === 'mascota_id') && resource.fields.some(f => f.name === 'tutor_contacto_id')
   const withHistory = resource.name === 'atencion_clinica' && !row
   const revisionResource = catalog.find(item => item.name === 'revision_clinica')
   const fields = [
@@ -215,24 +215,29 @@ export function RecordEditor({
     }
   }
   async function selectRelation(field: Field, id: string, selected?: Row, tutorId?: string) {
-    setValues(current => ({ ...current, [field.name]: id }))
-    if (field.name === 'tutor_contacto_id') { autoContact.current = ''; selectionRequest.current++; return }
-    if (field.reference?.resource !== 'mascota' || resource.name !== 'cita') return
     const generation = ++selectionRequest.current
-    const canSuggest = !values.tutor_contacto_id || values.tutor_contacto_id === autoContact.current
-    if (!canSuggest) return
-    setValues(current => ({ ...current, tutor_contacto_id: '' }))
-    autoContact.current = ''
-    let contact = tutorId ?? String(selected?.tutor_principal_id ?? '')
-    if (!contact && id && catalog.some(r => r.name === 'mascota_tutor')) {
-      try {
-        const page = await api.list('mascota_tutor', undefined, { mascota_id: id, es_principal: true, vigente_hasta: null })
-        contact = String(page.data[0]?.tutor_id ?? '')
-      } catch { return } // Contact remains editable if the link is unavailable.
+    if (!paired || !['mascota_id', 'tutor_contacto_id'].includes(field.name)) {
+      setValues(current => ({ ...current, [field.name]: id }))
+      return
     }
-    if (contact && mounted.current && generation === selectionRequest.current) {
-      autoContact.current = contact
-      setValues(current => current.mascota_id === id && !current.tutor_contacto_id ? { ...current, tutor_contacto_id: contact } : current)
+    const other = field.name === 'mascota_id' ? 'tutor_contacto_id' : 'mascota_id'
+    const target = other === 'mascota_id' ? 'mascota' : 'tutor'
+    const previous = values[other]
+    setValues(current => ({ ...current, [field.name]: id, ...(id ? { [other]: '' } : {}) }))
+    if (!id) return
+    try {
+      let candidate = previous || (field.name === 'mascota_id' ? tutorId ?? String(selected?.tutor_principal_id ?? '') : '')
+      if (!candidate && field.name === 'mascota_id' && catalog.some(r => r.name === 'mascota_tutor')) {
+        const page = await api.list('mascota_tutor', undefined, { mascota_id: id, es_principal: true, vigente_hasta: null })
+        candidate = String(page.data[0]?.tutor_id ?? '')
+      }
+      if (candidate) {
+        const page = await api.searchRelations(target, '', undefined, undefined, id, candidate)
+        if (page.data.some(r => r.id === candidate) && mounted.current && generation === selectionRequest.current)
+          setValues(current => current[field.name] === id ? { ...current, [other]: candidate } : current)
+      }
+    } catch {
+      // Keep the dependent field empty; its picker reports any lookup failure.
     }
   }
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -369,6 +374,7 @@ export function RecordEditor({
           {fields.map((field) => {
             const value = values[field.name] ?? ''
             const ref = field.reference
+            const linkedTo = paired ? (field.name === 'mascota_id' ? values.tutor_contacto_id : field.name === 'tutor_contacto_id' ? values.mascota_id : undefined) || undefined : undefined
             const isBreed = isPet && field.name === 'raza_id'
             const options = ref
               ? (withHistory && ref.resource === 'profesional') || catalog.some((r) => r.name === ref.resource)
@@ -440,7 +446,8 @@ export function RecordEditor({
                     {options?.error && <p className={styles.fieldError} role="alert">{options.error}</p>}
                   </>
                 ) : ref && ['mascota', 'tutor'].includes(ref.resource) && catalog.some(r => r.name === ref.resource) ? (
-                  <RelationPicker api={api} target={ref.resource} id={props.id} name={field.name} value={value} required={required}
+                  <RelationPicker key={`${field.name}:${linkedTo ?? ''}`} api={api} target={ref.resource}
+                    linkedTo={linkedTo} id={props.id} name={field.name} value={value} required={required}
                     onChange={(id, selected) => { void selectRelation(field, id, selected) }}
                     onCreate={catalog.find(r => r.name === ref.resource)?.permissions.create ? () => setCreatingRelation({ field, resource: catalog.find(r => r.name === ref.resource)! }) : undefined} />
                 ) : ref ? (
