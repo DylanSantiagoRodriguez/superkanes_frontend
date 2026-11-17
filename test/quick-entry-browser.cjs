@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict');
 const {chromium}=require('playwright');
-module.exports=async function quickEntry({base,adminToken,user,ids,outside}) {
+module.exports=async function quickEntry({base,adminToken,user,ids,outside,stranger,otherPet}) {
  const browser=await chromium.launch();const page=await browser.newPage({viewport:{width:1440,height:1000}});
  const origin=process.env.TEST_FRONTEND_URL||'http://localhost:5174';
  let loseTutor=true;const errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -14,9 +14,19 @@ module.exports=async function quickEntry({base,adminToken,user,ids,outside}) {
  });
  const saved=(resource)=>page.waitForResponse(r=>new URL(r.url()).pathname===`/api/v1/resources/${resource}`&&r.request().method()==='POST');
  try{
-  await page.goto(origin);await page.getByRole('navigation',{name:'Navegación principal'}).getByRole('button',{name:'Agenda',exact:true}).click();
+  await page.goto(origin);await page.getByRole('combobox',{name:'Organización',exact:true}).selectOption({label:'Prueba A'});await page.getByRole('navigation',{name:'Navegación principal'}).getByRole('button',{name:'Agenda',exact:true}).click();
   await page.getByRole('button',{name:'Programar cita',exact:true}).click();
   const appointment=page.getByRole('dialog',{name:'Programar cita',exact:true});
+  // Elegir tutor primero restringe mascotas; elegir mascota restringe tutores.
+  await appointment.locator(`[name="tutor_contacto_id"] option[value="${stranger.id}"]`).waitFor({state:'attached'});
+  await appointment.locator('[name="tutor_contacto_id"]').selectOption(stranger.id);
+  await appointment.locator(`[name="mascota_id"] option[value="${otherPet.id}"]`).waitFor({state:'attached'});
+  assert.equal(await appointment.locator('[name="mascota_id"] option').count(),2);
+  await appointment.locator('[name="mascota_id"]').selectOption(otherPet.id);
+  await page.waitForFunction(id=>document.querySelector('#field-tutor_contacto_id')?.value===id,stranger.id);
+  assert.equal(await appointment.locator('[name="tutor_contacto_id"] option').count(),2);
+  await appointment.locator('[name="tutor_contacto_id"]').selectOption('');
+  await appointment.locator('[name="mascota_id"]').selectOption('');
   await appointment.locator('[name="notas"]').fill('Datos de la cita conservados');
   await appointment.locator('[name="inicio"]').fill('2027-06-15T09:00');await appointment.locator('[name="fin"]').fill('2027-06-15T09:30');
   await appointment.locator(`[name="sede_id"] option[value="${ids.sede}"]`).waitFor({state:'attached'});await appointment.locator('[name="sede_id"]').selectOption(ids.sede);

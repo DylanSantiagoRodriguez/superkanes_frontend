@@ -552,10 +552,14 @@ export function createApi(
       resource: string,
       search: string,
       after?: string,
-      signal?: AbortSignal
+      signal?: AbortSignal,
+      linkedTo?: string,
+      selectedId?: string
     ) => {
       const params = new URLSearchParams({ limit: '25', search })
       if (after) params.set('after', after)
+      if (linkedTo) params.set('linked_to', linkedTo)
+      if (selectedId) params.set('filter', JSON.stringify({ id: selectedId }))
       return (await request(`${base(resource)}?${params}`, { signal })) as Page
     },
     get: async (resource: string, id: string) =>
