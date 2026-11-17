@@ -43,14 +43,3 @@
   .collapsed nav, .collapsed .logout, .collapsed .organizationShortcut { display: none; }
   .breadcrumb { flex: 1; }
 }
-
-/* Keep the brand background local to navigation, not clinical surfaces. */
-:global(:root:not([data-theme='dark'])) .sidebar {
-  --color-text: var(--color-on-primary);
-  --color-muted: var(--color-on-primary);
-  --color-brand: var(--color-on-primary);
-  --color-primary-text: var(--color-on-primary);
-  --color-focus: var(--color-on-primary);
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-}
