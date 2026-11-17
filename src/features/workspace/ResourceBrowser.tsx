@@ -1,3 +1,4 @@
+import { GroomingEntry } from '../clinical/GroomingEntry'
 import { GuardianProfile } from './GuardianProfile'
 import { DetailValue, RecordDetails } from './RecordDetails'
 import { PatientChart } from '../clinical/PatientChart'
@@ -54,6 +55,7 @@ export function ResourceBrowser({
   const [problem, setProblem] = useState('')
   const [notice, setNotice] = useState('')
   const [selected, setSelected] = useState<Row | null>(initialRecord ?? null)
+  const [entryService, setEntryService] = useState<'Baño' | 'Peluquería'>('Peluquería')
   const [editing, setEditing] = useState<Row | 'new' | null>(null)
   const [transferring, setTransferring] = useState<Row | null>(null)
   const [deleting, setDeleting] = useState<Row | null>(null)
@@ -269,12 +271,14 @@ export function ResourceBrowser({
             <button onClick={reload} disabled={loading || busy}>
               Actualizar
             </button>
+            {resource.name === 'servicio_peluqueria' && resource.permissions.create && <button onClick={() => { setEntryService('Baño'); setEditing('new') }}>Nuevo baño</button>}
             {resource.permissions.create &&
               !managedCreation.has(resource.name) && (
                 <button
                   className={styles.primary}
                   onClick={() => {
                     setNotice('')
+                    setEntryService('Peluquería')
                     setEditing('new')
                   }}
                 >
@@ -459,7 +463,11 @@ export function ResourceBrowser({
           onSaved={saved}
         />
       )}
-      {editing && (
+      {editing === 'new' && resource.name === 'servicio_peluqueria' ? (
+        <GroomingEntry api={api} catalog={catalog} service={entryService}
+          onClose={reserved => { setEditing(null); if (reserved) setNotice('La reserva quedó guardada en Agenda. El ingreso aún no se ha registrado.') }}
+          onSaved={saved} />
+      ) : editing && (
         <RecordEditor
           api={api}
           resource={resource}
