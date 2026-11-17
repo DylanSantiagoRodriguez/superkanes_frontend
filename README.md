@@ -100,5 +100,5 @@ versión, completo o parcial (3–36 caracteres hexadecimales o guiones, sin dis
 mayúsculas). La búsqueda se ejecuta en servidor y conserva paciente, revisión, permisos
 y paginación. Limpiar restaura el listado; abrir y descargar mantienen su contrato.
 El GET documental admite `codigo` opcional; no hay migraciones ni dependencias nuevas.
-Desplegar backend antes de frontend. [Especificación](../document-management/specs/007-busqueda-documentos/spec.md)
-y [flujo Codex/SDD](../README.md).
+Desplegar backend antes de frontend. La especificación y el flujo Codex/SDD se publican en el
+[PR de backend](https://github.com/DylanSantiagoRodriguez/superkanes_backend/pull/1).
