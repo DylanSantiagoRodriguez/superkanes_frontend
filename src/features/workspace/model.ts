@@ -426,11 +426,13 @@ export function createApi(
       id: string,
       after?: string,
       revisionId?: string,
-      signal?: AbortSignal
+      signal?: AbortSignal,
+      codigo?: string
     ) => {
       const params = new URLSearchParams()
       if (after) params.set('after', after)
       if (revisionId) params.set('revision_id', revisionId)
+      if (codigo) params.set('codigo', codigo)
       return (await request(
         `/storage/clinical/pacientes/${encodeURIComponent(id)}/documentos?${params}`,
         { signal }
