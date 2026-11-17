@@ -1,20 +1,75 @@
 import styles from './PatientChart.module.css'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { JSONContent } from '@tiptap/react'
 import type { Api, Row } from '../workspace/model'
 import { errorMessage } from '../../shared/api/http'
 import { ClinicalDocument } from './ClinicalDocument'
 import { downloadClinical } from './clinical-files-api'
 
-export function PatientDocuments({
+type DocumentProps = { api: Api; patientId: string; revisionId?: string }
+
+export function PatientDocuments(props: DocumentProps) {
+  return (
+    <DocumentSearch
+      key={`${props.patientId}/${props.revisionId ?? ''}`}
+      {...props}
+    />
+  )
+}
+
+function DocumentSearch(props: DocumentProps) {
+  const [input, setInput] = useState('')
+  const [codigo, setCodigo] = useState('')
+  return (
+    <section
+      className={styles.documentList}
+      aria-label="Documentos guardados del paciente"
+    >
+      <h3>Documentos de historia clínica</h3>
+      <p>
+        Versiones guardadas del editor, vinculadas a este paciente. Puedes abrir
+        su contenido y descargar el original editable. Los PDF de consulta se
+        emiten desde una revisión cerrada.
+      </p>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault()
+          setCodigo(input.trim())
+        }}
+      >
+        <label>
+          Buscar por identificador del documento
+          <input
+            type="search"
+            value={input}
+            pattern={String.raw`\s*([0-9a-fA-F\-]{3,36})?\s*`}
+            title="Introduce de 3 a 36 caracteres hexadecimales o guiones del identificador."
+            onChange={(event) => setInput(event.target.value)}
+          />
+        </label>{' '}
+        <button type="submit">Buscar documentos</button>{' '}
+        <button
+          type="button"
+          onClick={() => {
+            setInput('')
+            setCodigo('')
+          }}
+        >
+          Limpiar búsqueda
+        </button>
+      </form>
+      <DocumentResults key={codigo} {...props} codigo={codigo} />
+    </section>
+  )
+}
+
+function DocumentResults({
   api,
   patientId,
-  revisionId
-}: {
-  api: Api
-  patientId: string
-  revisionId?: string
-}) {
+  revisionId,
+  codigo
+}: DocumentProps & { codigo: string }) {
+  const listRequest = useRef<AbortController | null>(null)
   const [rows, setRows] = useState<Row[] | null>(null)
   const [next, setNext] = useState<string | null>(null)
   const [problem, setProblem] = useState('')
@@ -24,8 +79,9 @@ export function PatientDocuments({
   const [document, setDocument] = useState<JSONContent | null>(null)
   useEffect(() => {
     const controller = new AbortController()
+    listRequest.current = controller
     api
-      .patientDocuments(patientId, undefined, revisionId, controller.signal)
+      .patientDocuments(patientId, undefined, revisionId, controller.signal, codigo)
       .then((page) => {
         if (!controller.signal.aborted) {
           setProblem('')
@@ -37,7 +93,7 @@ export function PatientDocuments({
         if (!controller.signal.aborted) setProblem(errorMessage(error))
       })
     return () => controller.abort()
-  }, [api, patientId, revisionId, retry])
+  }, [api, patientId, revisionId, retry, codigo])
   useEffect(() => {
     let active = true
     if (selected)
@@ -56,29 +112,40 @@ export function PatientDocuments({
   }, [api, selected, retry])
   async function more() {
     if (!next || busy) return
+    const controller = listRequest.current
+    if (!controller || controller.signal.aborted) return
     setBusy(true)
+    setProblem('')
     try {
-      const page = await api.patientDocuments(patientId, next, revisionId)
+      const page = await api.patientDocuments(
+        patientId, next, revisionId, controller.signal, codigo
+      )
+      if (controller.signal.aborted) return
       setRows((current) => [...(current ?? []), ...page.data])
       setNext(page.page.next)
     } catch (error) {
-      setProblem(errorMessage(error))
+      if (!controller.signal.aborted) setProblem(errorMessage(error))
     } finally {
-      setBusy(false)
+      if (!controller.signal.aborted) setBusy(false)
     }
   }
   return (
-    <section className={styles.documentList} aria-label="Documentos guardados del paciente">
-      <h3>Documentos de historia clínica</h3>
-      <p>
-        Versiones guardadas del editor, vinculadas a este paciente. Puedes abrir
-        su contenido y descargar el original editable. Los PDF de consulta se
-        emiten desde una revisión cerrada.
-      </p>
+    <>
       {problem && (
         <p role="alert">
           {problem}{' '}
-          <button onClick={() => setRetry((value) => value + 1)}>
+          <button
+            onClick={() => {
+              listRequest.current?.abort()
+              setRows(null)
+              setNext(null)
+              setProblem('')
+              setBusy(false)
+              setSelected(null)
+              setDocument(null)
+              setRetry((value) => value + 1)
+            }}
+          >
             Reintentar documentos
           </button>
         </p>
@@ -86,8 +153,9 @@ export function PatientDocuments({
       {!rows && !problem && <p role="status">Cargando documentos…</p>}
       {rows?.length === 0 && (
         <p>
-          No hay versiones archivadas en MinIO para esta selección. Los
-          documentos anteriores a esta función permanecen en sus consultas.
+          {codigo
+            ? 'No se encontraron documentos con ese identificador.'
+            : 'No hay versiones archivadas para esta selección. Los documentos anteriores a esta función permanecen en sus consultas.'}
         </p>
       )}
       {rows?.map((row) => (
@@ -96,6 +164,9 @@ export function PatientDocuments({
             Revisión {String(row.numero_revision)} · versión guardada{' '}
             {String(row.version_revision)}
           </h4>
+          <p style={{ overflowWrap: 'anywhere' }}>
+            Identificador del documento: {row.id}
+          </p>
           <p>
             {new Date(String(row.creado_en)).toLocaleString('es-CO')} ·{' '}
             {String(row.estado_revision)}
@@ -139,6 +210,6 @@ export function PatientDocuments({
           )}
         </div>
       )}
-    </section>
+    </>
   )
 }
