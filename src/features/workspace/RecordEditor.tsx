@@ -69,7 +69,8 @@ export function RecordEditor({
   onSaved,
   title,
   initialValues,
-  depth = 0
+  depth = 0,
+  groomingService
 }: {
   api: Api
   resource: Resource
@@ -80,6 +81,7 @@ export function RecordEditor({
   title?: string
   initialValues?: Record<string, unknown>
   depth?: number
+  groomingService?: 'Baño' | 'Peluquería'
 }) {
   const [creatingRelation, setCreatingRelation] = useState<{ field: Field; resource: Resource } | null>(null)
   const editorId = depth ? `editor-title-${depth}` : 'editor-title'
@@ -89,7 +91,7 @@ export function RecordEditor({
   const withHistory = resource.name === 'atencion_clinica' && !row
   const revisionResource = catalog.find(item => item.name === 'revision_clinica')
   const fields = [
-    ...editableFields(resource, row).filter(field => !(withHistory && ['estado', 'motivo_anulacion'].includes(field.name))),
+    ...editableFields(resource, row).filter(field => (!groomingService || ['tutor_contacto_id', 'mascota_id', 'inicio', 'sede_id'].includes(field.name)) && !(withHistory && ['estado', 'motivo_anulacion'].includes(field.name))),
     ...(withHistory ? [
       { name: 'motivo_consulta', type: 'text', nullable: false, required: true, enum: [], default: null, create: true, update: false, reference: null },
       { name: 'documento', type: 'jsonb', nullable: true, required: false, enum: [], default: null, create: true, update: false, reference: null }
@@ -244,7 +246,7 @@ export function RecordEditor({
     event.preventDefault()
     if (pending.current || conflict || uploading) return
     setProblem('')
-    const body: Record<string, unknown> = {}
+    const body: Record<string, unknown> = groomingService && !row ? { tipo: 'peluqueria', notas: groomingService } : {}
     try {
       for (const field of fields) {
         const value = values[field.name] ?? ''
@@ -431,7 +433,7 @@ export function RecordEditor({
                 key={field.name}
               >
                 <label htmlFor={props.id}>
-                  {label(field.name)}
+                  {groomingService && field.name === 'inicio' ? 'Día y hora' : label(field.name)}
                   {required ? ' *' : ''}
                 </label>
                 {(resource.name === 'revision_clinica' || withHistory) && field.name === 'documento' ? (

@@ -1,0 +1,62 @@
+const assert=require('node:assert/strict');
+const {chromium}=require('playwright');
+module.exports=async function groomingBrowser({base,adminToken,user,ids}) {
+ const browser=await chromium.launch();const page=await browser.newPage({viewport:{width:1440,height:1000}});
+ const origin=process.env.TEST_FRONTEND_URL||'http://localhost:5174';
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));let loseAdmission=true;
+ await page.route('**/api/v1/**',async route=>{
+  const url=new URL(route.request().url());const cors={'access-control-allow-origin':origin,'access-control-allow-credentials':'true'};
+  if(url.pathname==='/api/v1/auth/refresh')return route.fulfill({json:{accessToken:adminToken,userId:user,expiresIn:3600},headers:cors});
+  if(route.request().method()==='OPTIONS')return route.fulfill({status:204,headers:{...cors,'access-control-allow-headers':'*','access-control-allow-methods':'GET,POST,PATCH,DELETE,OPTIONS'}});
+  const response=await route.fetch({url:base+url.pathname+url.search});
+  if(loseAdmission&&url.pathname.endsWith('/ingreso-peluqueria')&&response.status()===201){loseAdmission=false;return route.abort('failed');}
+  await route.fulfill({response,headers:{...response.headers(),...cors}});
+ });
+ try{
+  await page.goto(origin);
+  await page.getByRole('combobox',{name:'Organización',exact:true}).selectOption({label:'Prueba A'});
+  await page.getByRole('navigation').getByRole('button',{name:'Agenda',exact:true}).click();
+  await page.getByLabel('Día de atención',{exact:true}).fill('2028-06-13');
+  for(const service of ['baño','peluquería']){
+   await page.getByRole('button',{name:`Programar ${service}`,exact:true}).click();
+   const form=page.getByRole('dialog',{name:`Programar ${service}`,exact:true});
+   assert.deepEqual((await form.locator('fieldset [name]').evaluateAll(nodes=>nodes.map(n=>n.name))).sort(),['inicio','mascota_id','sede_id','tutor_contacto_id']);
+   await form.locator(`[name="tutor_contacto_id"] option[value="${ids.tutor}"]`).waitFor({state:'attached'});
+   await form.locator('[name="tutor_contacto_id"]').selectOption(ids.tutor);
+   await form.getByLabel('Buscar mascota',{exact:true}).fill('M001');
+   await form.locator(`[name="mascota_id"] option[value="${ids.mascota}"]`).waitFor({state:'attached'});
+   await form.locator('[name="mascota_id"]').selectOption(ids.mascota);
+   await page.waitForFunction(id=>document.querySelector('#field-tutor_contacto_id')?.value===id,ids.tutor);
+   await form.locator(`[name="sede_id"] option[value="${ids.sede}"]`).waitFor({state:'attached'});
+   await form.locator('[name="sede_id"]').selectOption(ids.sede);
+   await form.getByLabel('Día y hora',{exact:false}).fill('2028-06-13T10:00');
+   const saved=page.waitForResponse(r=>new URL(r.url()).pathname.endsWith('/resources/cita')&&r.request().method()==='POST');
+   await form.getByRole('button',{name:'Guardar',exact:true}).click();
+   const response=await saved;assert.equal(response.status(),201);const row=(await response.json()).data;
+   assert.equal(row.fin,null);assert.equal(row.tipo,'peluqueria');assert.equal(row.notas,service==='baño'?'Baño':'Peluquería');
+   await form.waitFor({state:'hidden'});
+  }
+  const bath=page.getByRole('listitem').filter({hasText:'Baño'});
+  await bath.getByRole('button',{name:'Registrar ingreso',exact:true}).click();
+  const consent=page.getByRole('dialog',{name:'Registrar ingreso · Baño',exact:true});
+  assert.equal(await consent.getByLabel('Contenido del consentimiento').inputValue(),'');
+  assert.equal(await consent.getByRole('checkbox').count(),0);
+  await consent.getByRole('button',{name:'Cancelar',exact:true}).click();
+  await bath.getByRole('button',{name:'Registrar ingreso',exact:true}).click();
+  await consent.getByRole('button',{name:'Guardar ingreso con hora actual',exact:true}).click();
+  await consent.getByRole('alert').waitFor();
+  const received=page.waitForResponse(r=>r.url().endsWith('/ingreso-peluqueria')&&r.status()===201);
+  await consent.getByRole('button',{name:'Guardar ingreso con hora actual',exact:true}).click();
+  const result=(await (await received).json()).data;
+  assert.equal(result.service.estado,'recibido');assert.equal(result.service.requiere_consentimiento,true);
+  await page.getByRole('status').filter({hasText:'Consentimiento pendiente'}).waitFor();
+  await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+  await page.screenshot({path:'/tmp/superkanes-grooming-agenda.png',fullPage:true});
+  await bath.getByRole('button',{name:'Abrir Peluquería',exact:true}).click();
+  await page.getByRole('heading',{name:'Peluquería',exact:true}).waitFor();
+  assert.equal(await page.getByRole('combobox',{name:'Sección',exact:true}).inputValue(),'servicio_peluqueria');
+  assert.deepEqual(errors,[]);
+  console.log('OK: Chromium: reservas cortas de baño/peluquería, consentimiento vacío, cancelación, ingreso con hora servidor, reintento y navegación a Peluquería.');
+ }catch(error){await page.screenshot({path:'/tmp/superkanes-grooming-failure.png',fullPage:true});throw error;}
+ finally{await page.waitForLoadState('networkidle');await page.unrouteAll({behavior:'wait'});await browser.close();}
+};
