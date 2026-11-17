@@ -92,3 +92,13 @@ La prueba `test/patient-chart-browser.cjs` usa una API y PostgreSQL efímeros co
 En **Ficha clínica → Documentos del editor** se muestran las versiones archivadas. **Ver documento guardado** recupera el archivo de MinIO y lo presenta con formato, en modo lectura. **Descargar original editable (JSON)** entrega ese mismo contenido. Las versiones de la revisión también están accesibles desde la consulta. Los PDF de historia, receta e indicaciones se siguen emitiendo al cerrar la revisión.
 
 Los documentos guardados antes de esta función permanecen accesibles en sus consultas; no se archivan retroactivamente historias cerradas. Para esta función se necesita aplicar la migración `1794321000000-clinical-document-archive` y tener permisos clínicos y de archivos. Ver [contrato y persistencia](../superkanes_backend/README.md#archivo-automático-del-documento-del-editor-en-minio).
+
+## Incremento SDD 007: búsqueda documental
+
+En Documentos del editor se puede buscar por el identificador UUID existente de una
+versión, completo o parcial (3–36 caracteres hexadecimales o guiones, sin distinguir
+mayúsculas). La búsqueda se ejecuta en servidor y conserva paciente, revisión, permisos
+y paginación. Limpiar restaura el listado; abrir y descargar mantienen su contrato.
+El GET documental admite `codigo` opcional; no hay migraciones ni dependencias nuevas.
+Desplegar backend antes de frontend. [Especificación](../document-management/specs/007-busqueda-documentos/spec.md)
+y [flujo Codex/SDD](../README.md).
