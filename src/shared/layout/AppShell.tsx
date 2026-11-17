@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { ThemeSelect } from '../theme/ThemeSelect'
 import { AppIcon } from '../ui/AppIcon'
 import styles from './AppShell.module.css'
 export interface NavigationItem {
@@ -66,7 +67,7 @@ export function AppShell({
             Mi clínica /{' '}
             <strong>{items.find((item) => item.id === active)?.label}</strong>
           </span>
-          <span>Espacio de trabajo</span>
+          <ThemeSelect />
         </header>
         <main id="workspace" tabIndex={-1} className={styles.main}>
           {children}

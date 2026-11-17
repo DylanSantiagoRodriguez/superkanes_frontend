@@ -102,3 +102,15 @@ y paginación. Limpiar restaura el listado; abrir y descargar mantienen su contr
 El GET documental admite `codigo` opcional; no hay migraciones ni dependencias nuevas.
 Desplegar backend antes de frontend. La especificación y el flujo Codex/SDD se publican en el
 [PR de backend](https://github.com/DylanSantiagoRodriguez/superkanes_backend/pull/1).
+
+## Apariencia turquesa y modo oscuro
+
+El acento principal es `#00B4D8`. En **Apariencia**, disponible en acceso y en la
+cabecera del workspace, elige **Claro**, **Oscuro** o **Sistema**. La elección se
+recuerda en el navegador; solo se almacena esta preferencia visual. Sistema sigue
+los cambios de apariencia del dispositivo. Las superficies blancas se conservan
+en Claro; la hoja del documento clínico permanece blanca para respetar su formato.
+
+Verificación visual automatizada: con Vite en localhost:5174 y Chromium instalado,
+`node test/theme-browser.cjs`. Usa respuestas sintéticas para probar apariencia,
+preferencias, móvil y contraste; no sustituye las pruebas de integración de la API.
