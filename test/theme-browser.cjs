@@ -3,7 +3,9 @@ const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
 const origin = process.env.TEST_FRONTEND_URL || 'http://localhost:5174';
 function luminance(hex) {
-  const c = hex.replace('#', '').match(/../g).map(v => parseInt(v, 16) / 255)
+  const value = hex.replace('#', '');
+  const expanded = value.length === 3 ? [...value].map(c => c + c).join('') : value;
+  const c = expanded.match(/../g).map(v => parseInt(v, 16) / 255)
     .map(v => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4);
   return c[0] * .2126 + c[1] * .7152 + c[2] * .0722;
 }
@@ -50,7 +52,7 @@ function contrast(a, b) {
   }
   try {
     await page.goto(origin); await select().waitFor(); await theme('light'); await colors();
-    assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--surface').trim()), '#ffffff');
+    assert.equal(luminance(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--surface').trim())), 1);
     const email = page.locator('input[type=email]'); await email.fill('visual@example.test');
     await select().selectOption('dark'); await theme('dark'); await colors();
     assert.equal(await email.inputValue(), 'visual@example.test');
