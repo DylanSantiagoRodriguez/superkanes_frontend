@@ -29,12 +29,13 @@ function contrast(a, b) {
     if (path.endsWith('/auth/refresh')) {
       if (!signedIn) return route.fulfill({ status: 401, json: {}, headers });
       json = { accessToken: 'synthetic-theme-fixture', userId: 'theme-user', expiresIn: 3600 };
-    } else if (path.endsWith('/auth/me')) json = { nombre: 'Prueba visual', platformAdmin: true, organizations: [{ id: 'theme-org', nombre: 'Clínica de prueba visual' }] };
+    } else if (path.endsWith('/auth/me')) json = { nombre: 'Prueba visual', platformAdmin: true, organizations: [{ id: 'theme-org', nombre: 'Clínica de prueba visual' }, { id: 'other-org', nombre: 'Otra clínica' }] };
     else if (path.endsWith('/resources')) json = { resources: [{ name: 'cita', fields: [], permissions: { create: false, update: false, delete: false }, deletion: 'none', deletionEffect: null, transitions: null }] };
     return route.fulfill({ json, headers });
   });
   const theme = value => page.waitForFunction(v => document.documentElement.dataset.theme === v, value);
-  const select = () => page.getByRole('combobox', { name: 'Apariencia', exact: true });
+  const toggle = () => page.getByRole('button', { name: /^Cambiar a modo (claro|oscuro)$/ });
+  async function mode(value) { if (await page.evaluate(() => document.documentElement.dataset.theme) !== value) await toggle().click(); await theme(value); }
   async function colors() {
     const pairs = await page.evaluate(() => {
       const s = getComputedStyle(document.documentElement);
@@ -51,44 +52,57 @@ function contrast(a, b) {
     for (const [a,b,x,y] of pairs) assert.ok(contrast(x,y) >= 4.5, `${a}/${b}: ${contrast(x,y)}`);
   }
   try {
-    await page.goto(origin); await select().waitFor(); await theme('light'); await colors();
+    await page.goto(origin); await toggle().waitFor(); await theme('light'); await colors();
     assert.equal(luminance(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--surface').trim())), 1);
     const email = page.locator('input[type=email]'); await email.fill('visual@example.test');
-    await select().selectOption('dark'); await theme('dark'); await colors();
+    await mode('dark'); await theme('dark'); await colors();
     assert.equal(await email.inputValue(), 'visual@example.test');
     await page.screenshot({ path: '/tmp/superkanes-login-dark.png', fullPage: true, animations: 'disabled' });
-    await page.reload(); await select().waitFor(); await theme('dark');
-    assert.equal(await select().inputValue(), 'dark');
-    await select().selectOption('system'); await theme('light');
+    await page.reload(); await toggle().waitFor(); await theme('dark');
+    assert.equal(await page.getByRole('combobox', { name: 'Apariencia' }).count(), 0);
+    await page.evaluate(() => localStorage.setItem('superkanes.appearance', 'system')); await page.reload(); await toggle().waitFor(); await theme('light');
     await page.emulateMedia({ colorScheme: 'dark' }); await theme('dark');
-    await select().selectOption('light'); await theme('light');
+    await mode('light'); await theme('light');
     await page.emulateMedia({ colorScheme: 'light' }); await page.emulateMedia({ colorScheme: 'dark' }); await theme('light');
     await page.screenshot({ path: '/tmp/superkanes-login-light.png', fullPage: true, animations: 'disabled' });
     signedIn = true; await page.reload(); await page.getByRole('navigation').waitFor();
-    await select().selectOption('dark'); await theme('dark');
+    await mode('dark'); await theme('dark');
     await page.getByRole('heading', { name: /calendario/i }).waitFor();
     await page.waitForFunction(() => {
       const selected = document.querySelector('nav button[aria-current]');
       return selected && getComputedStyle(selected).backgroundColor === 'rgb(18, 52, 62)';
     });
     await page.screenshot({ path: '/tmp/superkanes-workspace-dark.png', fullPage: true, animations: 'disabled' });
+    await page.getByRole('button', { name: 'Contraer menú lateral' }).click();
+    assert.equal(await page.locator('#workspace-sidebar').evaluate(el => el.getBoundingClientRect().width), 76);
+    assert.equal(await page.getByRole('button', { name: 'Expandir menú lateral' }).getAttribute('aria-expanded'), 'false');
+    await page.reload(); await page.getByRole('button', { name: 'Expandir menú lateral' }).waitFor();
+    await page.getByRole('button', { name: 'Elegir organización' }).click();
+    await page.getByRole('button', { name: 'Contraer menú lateral' }).waitFor();
+    const organizationRequest = page.waitForRequest(request => request.url().includes('/resources') && request.headers()['x-organization-id'] === 'other-org');
+    await page.getByRole('combobox', { name: 'Organización', exact: true }).selectOption('other-org');
+    await organizationRequest;
     await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByRole('button', { name: 'Contraer menú lateral' }).click();
+    await page.getByRole('navigation').waitFor({ state: 'hidden' });
+    await page.getByRole('button', { name: 'Expandir menú lateral' }).click();
+    await page.getByRole('navigation').waitFor();
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
-    await select().selectOption('light'); await theme('light');
+    await mode('light'); await theme('light');
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
     await page.screenshot({ path: '/tmp/superkanes-workspace-mobile.png', fullPage: true, animations: 'disabled' });
     signedIn = false;
     await page.evaluate(() => localStorage.setItem('superkanes.appearance', 'invalid'));
-    await page.reload(); await select().waitFor(); await theme('dark');
-    assert.equal(await select().inputValue(), 'system');
+    await page.reload(); await toggle().waitFor(); await theme('dark');
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.appearance), 'system');
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
     await page.addInitScript(() => {
       Storage.prototype.getItem = () => { throw new Error('Blocked storage'); };
       Storage.prototype.setItem = () => { throw new Error('Blocked storage'); };
     });
-    await page.reload(); await select().waitFor(); await theme('dark');
-    await select().selectOption('light'); await theme('light');
+    await page.reload(); await toggle().waitFor(); await theme('dark');
+    await mode('light'); await theme('light');
     assert.deepEqual(errors, []);
-    console.log('OK: Claro/Oscuro/Sistema, persistencia, sistema en vivo, controles, formulario conservado, calendario, móvil, storage bloqueado y 22 pares de contraste >=4.5.');
+    console.log('OK: Botón claro/oscuro, sidebar escritorio/móvil, preferencia heredada del sistema, persistencia, sistema en vivo, controles, formulario conservado, calendario, móvil, storage bloqueado y 22 pares de contraste >=4.5.');
   } finally { await context.unrouteAll({ behavior: 'wait' }); await browser.close(); }
 })().catch(e => { console.error(e); process.exitCode = 1; });
