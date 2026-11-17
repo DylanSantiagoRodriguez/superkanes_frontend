@@ -1,7 +1,7 @@
 .shell { display: flex; min-height: 100dvh; background: var(--surface-page); }
 .sidebar { width: 248px; flex-shrink: 0; background: var(--surface-sidebar); border-right: 1px solid var(--color-border); padding: 28px 16px 20px; display: flex; flex-direction: column; position: sticky; top: 0; height: 100dvh; overflow-y: auto; }
 .brand { display: flex; align-items: center; gap: 9px; font-weight: 750; font-size: 25px; letter-spacing: -1.1px; padding: 0 10px; color: var(--color-brand); }
-.brand > span { color: var(--color-primary-text); display: flex; }
+.brand > span:first-child { color: var(--color-primary-text); display: flex; }
 .clinic { margin: 32px 0 26px; padding: 13px; background: var(--surface); border: 1px solid var(--color-border); border-radius: var(--radius); font-size: 13px; }
 .clinic span { display: block; color: var(--color-muted); font-size: 11px; margin-top: 4px; }
 .label { font-size: 10px; letter-spacing: 1.5px; font-weight: 600; color: var(--color-muted); padding: 0 12px; }
@@ -9,8 +9,8 @@
 .sidebar nav button { display: flex; align-items: center; gap: 12px; border: 1px solid transparent; border-radius: var(--radius-sm); padding: 12px; background: transparent; color: var(--color-text); text-align: left; font-size: 13px; font-weight: 500; }
 .sidebar nav button:hover { background: var(--surface); border-color: var(--color-border); }
 .sidebar nav button[aria-current] { background: var(--color-primary-soft); border-color: var(--color-primary-border); color: var(--color-primary-text); font-weight: 650; }
-.sidebar nav button > span { display: flex; flex-shrink: 0; color: var(--color-brand); }
-.sidebar nav button[aria-current] > span { color: var(--color-primary-text); }
+.sidebar nav button > span:first-child { display: flex; flex-shrink: 0; color: var(--color-brand); }
+.sidebar nav button[aria-current] > span:first-child { color: var(--color-primary-text); }
 .bottom { margin-top: auto; padding: 36px 12px 20px; font-size: 12px; overflow-wrap: anywhere; }
 .bottom small { display: block; color: var(--color-muted); margin-top: 5px; }
 .logout { text-align: left; border: 0; border-top: 1px solid var(--color-border); border-radius: 0; padding: 16px 12px 0; background: transparent; color: var(--color-muted); font-size: 12px; }
@@ -24,3 +24,22 @@
 .skip:focus { top: 10px; left: 10px; }
 @media (max-width: 1050px) { .sidebar { width: 220px; padding-inline: 12px; } .brand { font-size: 22px; } .main { padding: 26px 22px; } .topbar { padding-inline: 22px; } }
 @media (max-width: 720px) { .shell { display: block; } .sidebar { position: static; width: 100%; height: auto; padding: 16px; border-right: 0; border-bottom: 1px solid var(--color-border); } .brand { padding: 0; } .label,.bottom { display: none; } .clinic { margin: 16px 0 0; max-width: 100%; } .sidebar nav { display: flex; overflow-x: auto; margin-top: 15px; padding: 4px 0 8px; } .sidebar nav button { white-space: nowrap; } .logout { align-self: flex-end; border: 0; padding-top: 10px; } .topbar { padding: 12px 16px; min-height: 55px; flex-wrap: wrap; } .main { padding: 24px 16px; } }
+
+.breadcrumb { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.breadcrumb > span { overflow-wrap: anywhere; }
+.sidebarToggle { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; flex-shrink: 0; }
+.logout { display: flex; align-items: center; gap: 10px; }
+.logout svg { flex-shrink: 0; }
+.sidebar.collapsed { width: 76px; padding-inline: 10px; }
+.collapsed .brand { padding: 0; justify-content: center; }
+.collapsed .brandName, .collapsed .clinic, .collapsed .label, .collapsed .bottom, .collapsed .navLabel { display: none; }
+.collapsed nav button { justify-content: center; padding: 12px; }
+.collapsed .logout { margin-top: auto; justify-content: center; padding: 16px 0 0; }
+.organizationShortcut { display: grid; place-items: center; padding: 10px; margin: 24px 0 18px; }
+@media (max-width: 720px) {
+  .sidebar.collapsed { width: 100%; padding: 12px 16px; }
+  .collapsed .brand { justify-content: flex-start; }
+  .collapsed .brandName { display: inline; }
+  .collapsed nav, .collapsed .logout, .collapsed .organizationShortcut { display: none; }
+  .breadcrumb { flex: 1; }
+}
