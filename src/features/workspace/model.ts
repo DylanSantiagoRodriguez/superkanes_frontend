@@ -389,6 +389,10 @@ export function createApi(
           { method: 'POST', body, headers: { 'Idempotency-Key': key } }
         )) as { data: Row }
       ).data,
+    groomingAdmission: async (row: Row, key: string) =>
+      ((await request(`/resources/clinica/citas/${encodeURIComponent(row.id)}/ingreso-peluqueria`, {
+        method: 'POST', body: {}, headers: { 'If-Match': `"${row.version}"`, 'Idempotency-Key': key }
+      })) as { data: { appointment: Row; service: Row } }).data,
     appointmentArrival: async (row: Row) =>
       (
         (await request(

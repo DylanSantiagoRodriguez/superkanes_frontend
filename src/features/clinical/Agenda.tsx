@@ -1,10 +1,11 @@
+import { GroomingAdmission } from './GroomingAdmission'
 import { useEffect, useState } from 'react'
 import type { Api, Resource, Row } from '../workspace/model'
 import { RecordEditor } from '../workspace/RecordEditor'
 import { errorMessage } from '../../shared/api/http'
 import { PatientChart } from './PatientChart'
 import styles from './PatientChart.module.css'
-export function Agenda({ api, catalog }: { api: Api; catalog: Resource[] }) {
+export function Agenda({ api, catalog, onOpenGrooming }: { api: Api; catalog: Resource[]; onOpenGrooming?: () => void }) {
   const [day, setDay] = useState(() => {
     const d = new Date()
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -16,6 +17,9 @@ export function Agenda({ api, catalog }: { api: Api; catalog: Resource[] }) {
   const [refresh, setRefresh] = useState(0),
     [editing, setEditing] = useState<Row | 'new' | null>(null),
     [appointment, setAppointment] = useState<Row | null>(null)
+  const [admission, setAdmission] = useState<Row | null>(null)
+  const [notice, setNotice] = useState('')
+  const [groomingService, setGroomingService] = useState<'Baño' | 'Peluquería' | undefined>()
   const [reminding, setReminding] = useState<Row | null>(null)
   const contract = catalog.find((r) => r.name === 'cita')!,
     reminder = catalog.find((r) => r.name === 'recordatorio')
@@ -97,13 +101,18 @@ export function Agenda({ api, catalog }: { api: Api; catalog: Resource[] }) {
           />
         </label>
         {contract.permissions.create && (
-          <button onClick={() => setEditing('new')}>Programar cita</button>
+          <>
+            <button onClick={() => { setGroomingService(undefined); setEditing('new') }}>Programar cita</button>
+            <button onClick={() => { setGroomingService('Baño'); setEditing('new') }}>Programar baño</button>
+            <button onClick={() => { setGroomingService('Peluquería'); setEditing('new') }}>Programar peluquería</button>
+          </>
         )}
         <button onClick={() => setRefresh((v) => v + 1)}>
           Actualizar agenda
         </button>
       </div>
       {problem && <p role="alert">{problem}</p>}
+      {notice && <p role="status">{notice}</p>}
       {!rows.length && !problem && <p>No hay citas cargadas para este día.</p>}
       <ol className={styles.timeline}>
         {[...rows]
@@ -122,12 +131,8 @@ export function Agenda({ api, catalog }: { api: Api; catalog: Resource[] }) {
                   {new Date(String(row.inicio)).toLocaleTimeString('es-CO', {
                     hour: '2-digit',
                     minute: '2-digit'
-                  })}{' '}
-                  –{' '}
-                  {new Date(String(row.fin)).toLocaleTimeString('es-CO', {
-                    hour: '2-digit',
-                    minute: '2-digit'
                   })}
+                  {row.fin ? ` – ${new Date(String(row.fin)).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}` : ''}
                 </time>
               </div>
               <p>
@@ -139,18 +144,24 @@ export function Agenda({ api, catalog }: { api: Api; catalog: Resource[] }) {
               <p>{String(row.notas ?? '')}</p>
               {contract.permissions.update &&
                 ['programada', 'confirmada'].includes(String(row.estado)) &&
-                !row.llegada_en && (
+                !row.llegada_en && row.tipo !== 'peluqueria' && (
                   <button disabled={busy} onClick={() => void arrive(row)}>
                     Registrar llegada
                   </button>
                 )}
-              {catalog.some((r) => r.name === 'mascota') && (
+              {row.tipo === 'peluqueria' && !row.llegada_en && ['programada', 'confirmada'].includes(String(row.estado)) && contract.permissions.update && catalog.find(r => r.name === 'servicio_peluqueria')?.permissions.create && (
+                <button onClick={() => setAdmission(row)}>Registrar ingreso</button>
+              )}
+              {row.tipo === 'peluqueria' && Boolean(row.llegada_en) && onOpenGrooming && (
+                <button onClick={onOpenGrooming}>Abrir Peluquería</button>
+              )}
+              {row.tipo !== 'peluqueria' && catalog.some((r) => r.name === 'mascota') && (
                 <button onClick={() => setAppointment(row)}>
                   Abrir paciente para atender
                 </button>
               )}
               {contract.permissions.update && (
-                <button onClick={() => setEditing(row)}>Editar cita</button>
+                <button onClick={() => { setGroomingService(row.tipo === 'peluqueria' ? row.notas === 'Baño' ? 'Baño' : 'Peluquería' : undefined); setEditing(row) }}>Editar cita</button>
               )}
               {reminder?.permissions.create && (
                 <button onClick={() => setReminding(row)}>
@@ -165,6 +176,13 @@ export function Agenda({ api, catalog }: { api: Api; catalog: Resource[] }) {
           Cargar más citas
         </button>
       )}
+      {admission && <GroomingAdmission api={api} appointment={admission}
+        onClose={() => { setAdmission(null); setRefresh(v => v + 1) }}
+        onSaved={result => {
+          setAdmission(null)
+          setNotice(`Ingreso guardado a las ${new Date(String(result.service.llegada_en)).toLocaleTimeString('es-CO')}. Consentimiento pendiente. Completa el seguimiento en Peluquería.`)
+          setRefresh(v => v + 1)
+        }} />}
       {editing && (
         <RecordEditor
           api={api}
@@ -176,7 +194,8 @@ export function Agenda({ api, catalog }: { api: Api; catalog: Resource[] }) {
             fin: day + 'T09:30:00',
             tipo: 'clinica'
           }}
-          title={editing === 'new' ? 'Programar cita' : 'Editar cita'}
+          groomingService={groomingService}
+          title={editing === 'new' ? groomingService ? `Programar ${groomingService.toLowerCase()}` : 'Programar cita' : 'Editar cita'}
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null)

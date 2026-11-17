@@ -291,7 +291,7 @@ function OrganizationWorkspace({
                 onAccessChanged={onAccessChanged}
               />
             ) : resource.name === 'cita' ? (
-              <Agenda api={api} catalog={resources} />
+              <Agenda api={api} catalog={resources} onOpenGrooming={() => navigate('grooming', 'servicio_peluqueria')} />
             ) : (
               <ResourceBrowser
                 key={resource.name}
