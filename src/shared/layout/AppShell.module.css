@@ -1,20 +1,20 @@
 .shell { display: flex; min-height: 100dvh; background: var(--surface-page); }
 .sidebar { width: 248px; flex-shrink: 0; background: var(--surface-sidebar); border-right: 1px solid var(--color-border); padding: 28px 16px 20px; display: flex; flex-direction: column; position: sticky; top: 0; height: 100dvh; overflow-y: auto; }
 .brand { display: flex; align-items: center; gap: 9px; font-weight: 750; font-size: 25px; letter-spacing: -1.1px; padding: 0 10px; color: var(--color-brand); }
-.brand > span { color: var(--color-primary); display: flex; }
+.brand > span { color: var(--color-primary-text); display: flex; }
 .clinic { margin: 32px 0 26px; padding: 13px; background: var(--surface); border: 1px solid var(--color-border); border-radius: var(--radius); font-size: 13px; }
 .clinic span { display: block; color: var(--color-muted); font-size: 11px; margin-top: 4px; }
 .label { font-size: 10px; letter-spacing: 1.5px; font-weight: 600; color: var(--color-muted); padding: 0 12px; }
 .sidebar nav { display: grid; gap: 6px; }
 .sidebar nav button { display: flex; align-items: center; gap: 12px; border: 1px solid transparent; border-radius: var(--radius-sm); padding: 12px; background: transparent; color: var(--color-text); text-align: left; font-size: 13px; font-weight: 500; }
 .sidebar nav button:hover { background: var(--surface); border-color: var(--color-border); }
-.sidebar nav button[aria-current] { background: var(--color-primary-soft); border-color: var(--color-primary-border); color: var(--color-primary-hover); font-weight: 650; }
+.sidebar nav button[aria-current] { background: var(--color-primary-soft); border-color: var(--color-primary-border); color: var(--color-primary-text); font-weight: 650; }
 .sidebar nav button > span { display: flex; flex-shrink: 0; color: var(--color-brand); }
-.sidebar nav button[aria-current] > span { color: var(--color-primary); }
+.sidebar nav button[aria-current] > span { color: var(--color-primary-text); }
 .bottom { margin-top: auto; padding: 36px 12px 20px; font-size: 12px; overflow-wrap: anywhere; }
 .bottom small { display: block; color: var(--color-muted); margin-top: 5px; }
 .logout { text-align: left; border: 0; border-top: 1px solid var(--color-border); border-radius: 0; padding: 16px 12px 0; background: transparent; color: var(--color-muted); font-size: 12px; }
-.logout:hover { color: var(--color-primary); }
+.logout:hover { color: var(--color-primary-text); }
 .body { flex: 1; min-width: 0; }
 .topbar { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 36px; background: var(--surface); border-bottom: 1px solid var(--color-border); font-size: 13px; color: var(--color-muted); }
 .topbar strong { color: var(--color-text); font-weight: 600; }

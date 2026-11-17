@@ -15,8 +15,8 @@
 .avatar {
   display: grid;
   place-items: center;
-  background: #eaf1ff;
-  color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-text);
   border-radius: 14px;
   flex-shrink: 0;
   width: 48px;
@@ -45,14 +45,14 @@
   cursor: pointer;
 }
 .panel button:hover {
-  background: #f1f6ff;
+  background: var(--surface-hover);
 }
 .panel button:disabled {
   opacity: 0.55;
   cursor: default;
 }
 .panel :is(button, input, select):focus-visible {
-  outline: 3px solid #8bb0fc;
+  outline: 3px solid var(--color-focus);
   outline-offset: 2px;
 }
 .modes {
@@ -62,9 +62,9 @@
   flex-wrap: wrap;
 }
 .modes button[aria-pressed='true'] {
-  background: #eaf1ff;
-  color: #2355bd;
-  border-color: #a6c1fb;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-text);
+  border-color: var(--color-primary-border);
 }
 .form {
   border: 0;
@@ -133,8 +133,8 @@
   text-align: left;
 }
 .users button[aria-pressed='true'] {
-  border-color: #80a9ff;
-  background: #f0f5ff;
+  border-color: var(--color-primary-border);
+  background: var(--surface-hover);
 }
 .users button > span:last-child {
   display: grid;
@@ -153,8 +153,8 @@
   padding: 17px;
 }
 .organization[data-selected='true'] {
-  border-color: #9dbdff;
-  background: #f9fbff;
+  border-color: var(--color-primary-border);
+  background: var(--color-primary-soft);
 }
 .panel .check {
   display: flex;
@@ -165,7 +165,7 @@
 .check input {
   width: 18px;
   height: 18px;
-  accent-color: #2863ed;
+  accent-color: var(--color-primary);
   flex-shrink: 0;
 }
 .check span {
@@ -191,11 +191,11 @@
 }
 .panel .primary {
   background: var(--color-primary);
-  color: white;
+  color: var(--color-on-primary);
   border-color: var(--color-primary);
 }
 .error {
-  color: #a33b4a;
+  color: var(--color-danger);
   font-size: 13px;
   line-height: 1.6;
 }

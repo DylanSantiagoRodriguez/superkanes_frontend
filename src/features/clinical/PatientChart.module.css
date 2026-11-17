@@ -1,5 +1,5 @@
 .chart { display: grid; gap: 22px; min-width: 0; font-size: 14px; }
-.chart button { border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 10px 14px; background: var(--surface); color: var(--color-primary); font: inherit; font-weight: 550; }
+.chart button { border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 10px 14px; background: var(--surface); color: var(--color-primary-text); font: inherit; font-weight: 550; }
 .chart button:hover:not(:disabled) { border-color: var(--color-primary-border); background: var(--surface-hover); }
 .chart button:disabled { opacity: .55; cursor: not-allowed; }
 .chart > button:first-child { justify-self: start; }
@@ -14,7 +14,7 @@
 .header h2 { font-size: clamp(26px, 2.5vw, 34px); line-height: 1.2; margin: 5px 0 10px; letter-spacing: -1px; }
 .header p { margin: 6px 0; }
 .identityText > p:not(.eyebrow) { color: var(--color-muted); font-size: 13px; }
-.eyebrow { font-size: 10px; letter-spacing: 1.5px; font-weight: 650; color: var(--color-primary); }
+.eyebrow { font-size: 10px; letter-spacing: 1.5px; font-weight: 650; color: var(--color-primary-text); }
 .guardianAvatar { display: grid; place-items: center; width: 88px; height: 88px; flex-shrink: 0; border-radius: 24px; background: var(--color-primary-soft); color: var(--color-brand); border: 1px solid var(--color-primary-border); font-size: 28px; font-weight: 650; letter-spacing: -1px; }
 .chips { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; color: var(--color-muted); font-size: 12px; margin-top: 12px; }
 .statusChip { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--color-brand); background: var(--color-primary-soft); padding: 4px 9px; border-radius: 20px; }
@@ -23,11 +23,11 @@
 .profileActions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-left: auto; }
 .profileActions > div, .profileActionGroup > div { display: flex; flex-wrap: wrap; gap: 8px; }
 .patientHeader .profileActions { flex-basis: 100%; border-top: 1px solid var(--color-border); padding-top: 18px; }
-.chart .primary { background: var(--color-primary); border-color: var(--color-primary); color: var(--surface); }
-.chart .primary:hover:not(:disabled) { background: var(--color-primary-hover); border-color: var(--color-primary-hover); box-shadow: 0 3px 10px #2563eb24; }
+.chart .primary { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-on-primary); }
+.chart .primary:hover:not(:disabled) { background: var(--color-primary-hover); border-color: var(--color-primary-hover); box-shadow: 0 3px 10px #00b4d824; }
 .profileFacts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex-basis: 100%; border-top: 1px solid var(--color-border); padding-top: 18px; }
 .profileFacts > div { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.profileFacts svg { color: var(--color-primary); flex-shrink: 0; }
+.profileFacts svg { color: var(--color-primary-text); flex-shrink: 0; }
 .profileFacts p { margin: 0; }
 .profileFacts span { display: block; color: var(--color-muted); font-size: 11px; margin-bottom: 3px; }
 .profileFacts strong { font-size: 13px; font-weight: 550; }
@@ -45,7 +45,7 @@
 .tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--surface); }
 .tabs button { border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--color-muted); padding: 8px 12px; font-size: 12px; }
 .tabs button:hover:not(:disabled) { border-color: var(--color-border); background: var(--surface-hover); color: var(--color-brand); }
-.tabs button[aria-current] { background: var(--color-primary-soft); border-color: var(--color-primary-border); color: var(--color-primary-hover); }
+.tabs button[aria-current] { background: var(--color-primary-soft); border-color: var(--color-primary-border); color: var(--color-primary-text); }
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
 .grid > section > .entry { padding-inline: 24px; }
 .grid > section > p { margin-inline: 24px; }
@@ -98,7 +98,7 @@
 .profileCard > dl dt { font-size: 11px; }
 .profileCard > dl dd { font-size: 13px; }
 .sectionTitle { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.sectionTitle svg { color: var(--color-primary); flex-shrink: 0; }
+.sectionTitle svg { color: var(--color-primary-text); flex-shrink: 0; }
 .sectionHint { color: var(--color-muted); font-size: 12px; margin: 0; }
 .profileCard .phone { border-radius: 8px; padding: 10px 12px; background: var(--surface-page); color: var(--color-text); }
 .profileMain, .profileAside { min-width: 0; }
@@ -108,7 +108,7 @@
 .patientDetails { padding: 0 20px; }
 .patientDetails summary { display: flex; gap: 12px; align-items: center; padding: 16px 0; font-size: 13px; list-style: none; }
 .patientDetails summary::-webkit-details-marker { display: none; }
-.patientDetails summary::before { content: '+'; color: var(--color-primary); font-size: 20px; font-weight: 400; }
+.patientDetails summary::before { content: '+'; color: var(--color-primary-text); font-size: 20px; font-weight: 400; }
 .patientDetails[open] summary::before { content: '−'; }
 .patientDetails summary span { margin-left: auto; color: var(--color-muted); font-weight: 400; font-size: 12px; }
 .patientDetails:hover { border-color: var(--color-primary-border); }
@@ -124,7 +124,7 @@
 .petMeta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 16px; font-size: 11px; color: var(--color-muted); }
 .petCard .relationship { margin-bottom: 4px; color: var(--color-text); font-weight: 550; }
 .chart .petLink { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: auto; padding: 12px 0 0; border: 0; border-top: 1px solid var(--color-border); border-radius: 0; background: transparent; text-align: left; font-size: 12px; }
-.chart .petLink:hover { color: var(--color-primary-hover); background: transparent; }
+.chart .petLink:hover { color: var(--color-primary-text); background: transparent; }
 .petLink > span:last-child { font-size: 19px; transition: transform .18s; }
 @media (hover: hover) { .petCard:hover { transform: translateY(-3px); border-color: var(--color-primary-border); box-shadow: var(--shadow-hover); } .petLink:hover > span:last-child { transform: translate(2px,-2px); } }
 .weightList { padding-left: 18px; font-size: 13px; }
@@ -144,7 +144,7 @@
 .weightFigure circle:hover { stroke: var(--color-primary-border); stroke-width: 5; }
 .profileCard > details { border-top: 1px solid var(--color-divider); margin-top: 16px; font-size: 12px; }
 .chart button { transition: background-color .16s, border-color .16s, box-shadow .16s; }
-.chart button:focus-visible, .chart summary:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 3px; }
+.chart button:focus-visible, .chart summary:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; }
 @media(max-width: 750px) { .identity { gap: 16px; flex-basis: 100%; } .header figure, .header figure img, .header figure > div { width: 80px; } .header figure img { height: 80px; } .header figure > div { min-height: 80px; } .guardianAvatar { width: 64px; height: 64px; border-radius: 18px; font-size: 23px; } .profileActions { margin-left: 0; } .header h2 { font-size: 25px; } .tabs button { padding: 8px 10px; font-size: 12px; } }
 @media(max-width: 540px) { .profileFacts { grid-template-columns: 1fr; gap: 14px; } .patientDetails summary span { display: none; } .alertList li { flex-wrap: wrap; gap: 5px; } .profileActions { gap: 8px; } .chart .profileActions button { padding: 9px 11px; font-size: 12px; } }
 @media(prefers-reduced-motion: reduce) { .chart button, .petCard, .petLink > span:last-child { transition: none; } .petCard:hover, .petLink:hover > span:last-child { transform: none; } }

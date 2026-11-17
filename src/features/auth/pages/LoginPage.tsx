@@ -1,3 +1,4 @@
+import { ThemeSelect } from '../../../shared/theme/ThemeSelect'
 import { AppIcon } from '../../../shared/ui/AppIcon'
 import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
@@ -44,6 +45,7 @@ export function LoginPage({ onLogin, message }: { onLogin: (session: Session) =>
         <p className={styles.storyFooter}>Hecho para cuidar de ellos. Y de tu equipo.</p>
       </section>
       <section className={styles.access} aria-labelledby="login-title">
+        <div className={styles.appearance}><ThemeSelect /></div>
         <span className={styles.topNote}><span aria-hidden="true">●</span> TU ESPACIO DE TRABAJO</span>
         <div className={styles.formContainer}>
           <div className={styles.welcomeIcon} aria-hidden="true"><AppIcon name="pets" size={28} /></div>
