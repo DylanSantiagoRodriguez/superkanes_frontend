@@ -15,6 +15,21 @@ module.exports=async function quickEntry({base,adminToken,user,ids,outside,stran
  const saved=(resource)=>page.waitForResponse(r=>new URL(r.url()).pathname===`/api/v1/resources/${resource}`&&r.request().method()==='POST');
  try{
   await page.goto(origin);await page.getByRole('combobox',{name:'Organización',exact:true}).selectOption({label:'Prueba A'});await page.getByRole('navigation',{name:'Navegación principal'}).getByRole('button',{name:'Agenda',exact:true}).click();
+  await page.getByRole('navigation',{name:'Navegación principal'}).getByRole('button',{name:'Historia clínica',exact:true}).click();
+  await page.getByRole('combobox',{name:'Sección',exact:true}).selectOption('atencion_clinica');
+  await page.getByRole('button',{name:'Nuevo registro',exact:true}).click();
+  const clinical=page.getByRole('dialog');
+  await clinical.locator(`[name="tutor_presente_id"] option[value="${stranger.id}"]`).waitFor({state:'attached'});
+  await clinical.locator('[name="tutor_presente_id"]').selectOption(stranger.id);
+  await clinical.locator(`[name="mascota_id"] option[value="${otherPet.id}"]`).waitFor({state:'attached'});
+  assert.equal(await clinical.locator('[name="mascota_id"] option').count(),2);
+  await clinical.locator('[name="mascota_id"]').selectOption(otherPet.id);
+  await page.waitForFunction(id=>document.querySelector('#field-tutor_presente_id')?.value===id,stranger.id);
+  assert.equal(await clinical.locator('[name="tutor_presente_id"] option').count(),2);
+  await clinical.getByRole('button',{name:'Cancelar',exact:true}).click();
+  const discard=clinical.getByRole('button',{name:'Descartar cambios',exact:true});
+  if(await discard.count())await discard.click();
+  await page.getByRole('navigation',{name:'Navegación principal'}).getByRole('button',{name:'Agenda',exact:true}).click();
   await page.getByRole('button',{name:'Programar cita',exact:true}).click();
   const appointment=page.getByRole('dialog',{name:'Programar cita',exact:true});
   // Elegir tutor primero restringe mascotas; elegir mascota restringe tutores.

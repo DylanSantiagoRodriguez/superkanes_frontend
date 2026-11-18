@@ -3,7 +3,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(400px, 560px);
   gap: clamp(24px, 4vw, 64px);
-  padding: 32px clamp(24px, 4vw, 64px);
+  padding: clamp(12px, 2.5svh, 32px) clamp(24px, 4vw, 64px);
   background:
     radial-gradient(ellipse at 85% 16%, color-mix(in srgb, var(--color-primary) 20%, transparent), transparent 48%),
     radial-gradient(ellipse at 52% 90%, color-mix(in srgb, var(--color-primary) 12%, transparent), transparent 52%),
@@ -13,22 +13,22 @@
 .brand { color: var(--color-brand); display: inline-flex; align-items: center; width: fit-content; text-decoration: none; font-size: 28px; font-weight: 750; letter-spacing: -1.4px; }
 .brandIcon { display: grid; place-items: center; width: 38px; height: 38px; margin-right: 10px; border-radius: 12px; background: var(--color-primary); color: var(--color-on-primary); font-size: 30px; font-weight: 400; }
 .brandDot { color: var(--color-primary-text); }
-.storyContent { margin: auto 0; padding-top: 64px; }
+.storyContent { margin: auto 0; padding-top: clamp(12px, 3svh, 40px); }
 .eyebrow { display: block; color: var(--color-primary-text); font-size: 10px; letter-spacing: 2px; font-weight: 700; margin-bottom: 18px; }
 .story h1 { font-size: clamp(34px, 3.2vw, 52px); line-height: 1.18; letter-spacing: -1.8px; font-weight: 550; margin-bottom: 22px; }
 .story h1 em { font-family: inherit; font-style: normal; font-weight: 650; color: var(--color-primary-text); }
 .storyContent > p { max-width: 365px; color: var(--color-muted); font-size: 14px; line-height: 1.85; }
 .illustration { max-width: 470px; margin: 12px -18px 4px; position: relative; }
-.illustration svg { display: block; width: 100%; }
+.illustration svg { display: block; width: 100%; max-height: clamp(140px, 29svh, 340px); }
 .careBadge { position: absolute; right: 3%; top: 23%; background: var(--surface); border: 1px solid var(--surface); border-radius: 9px; padding: 9px 12px; font-size: 10px; box-shadow: var(--shadow-hover); transform: rotate(5deg); }
 .careBadge span { color: var(--color-primary-text); font-size: 16px; vertical-align: middle; margin-right: 4px; }
 .features { display: flex; justify-content: center; flex-wrap: wrap; gap: 9px 18px; font-size: 10px; color: var(--color-muted); margin-top: 20px; }
 .features span::before { content: '✓'; margin-right: 5px; }
-.storyFooter { margin: 45px 0 0; font-size: 10px; color: var(--color-muted); }
+.storyFooter { margin: clamp(12px, 2svh, 28px) 0 0; font-size: 10px; color: var(--color-muted); }
 .access {
   min-width: 0;
   background: var(--surface);
-  padding: 28px 44px 24px;
+  padding: clamp(12px, 2svh, 24px) 44px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -46,12 +46,12 @@
 }
 .topNote { align-self: flex-end; font-size: 9px; letter-spacing: 1.7px; color: var(--color-muted); }
 .topNote span { color: var(--color-primary-text); font-size: 8px; margin-right: 7px; }
-.formContainer { width: 100%; max-width: 384px; margin: auto 0; padding: 32px 0; }
-.welcomeIcon { width: 49px; height: 49px; border: 1px solid var(--color-primary-border); background: var(--color-primary-soft); color: var(--color-primary-text); border-radius: 16px; display: grid; place-items: center; font-size: 28px; margin-bottom: 27px; }
+.formContainer { width: 100%; max-width: 384px; margin: auto 0; padding: clamp(8px, 1.5svh, 24px) 0; }
+.welcomeIcon { width: 49px; height: 49px; border: 1px solid var(--color-primary-border); background: var(--color-primary-soft); color: var(--color-primary-text); border-radius: 16px; display: grid; place-items: center; font-size: 28px; margin-bottom: clamp(8px, 1.5svh, 20px); }
 .formContainer .eyebrow { font-size: 9px; letter-spacing: 1.7px; margin-bottom: 9px; }
 .formContainer h2 { font-size: clamp(25px, 2.3vw, 33px); line-height: 1.25; letter-spacing: -1.1px; font-weight: 600; margin-bottom: 12px; }
-.subtitle { color: var(--color-muted); font-size: 13px; margin-bottom: 34px; }
-.label { display: block; font-size: 12px; font-weight: 600; margin: 22px 0 9px; }
+.subtitle { color: var(--color-muted); font-size: 13px; margin-bottom: clamp(12px, 2svh, 28px); }
+.label { display: block; font-size: 12px; font-weight: 600; margin: clamp(10px, 1.8svh, 20px) 0 6px; }
 .input { width: 100%; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 14px 15px; font-size: 13px; background: var(--surface); color: var(--color-text); min-height: 49px; transition: border-color .15s; }
 .input::placeholder { color: var(--color-placeholder); }
 .input:hover { border-color: var(--color-border-strong); }
@@ -61,15 +61,15 @@
 .passwordField input { padding-right: 54px; }
 .reveal { position: absolute; right: 3px; top: 3px; bottom: 3px; width: 43px; border: 0; border-radius: 5px; background: transparent; color: var(--color-muted); display: grid; place-items: center; }
 .reveal:hover { background: var(--surface-hover); }
-.helpRow { display: flex; justify-content: flex-end; margin: 9px 0 19px; }
+.helpRow { display: flex; justify-content: flex-end; margin: 6px 0 10px; }
 .textButton { border: 0; background: transparent; color: var(--color-primary-text); font-size: 11px; font-weight: 600; min-height: 34px; padding: 4px 0; }
 .textButton:hover { text-decoration: underline; }
 .submit { display: flex; align-items: center; justify-content: center; gap: 18px; width: 100%; min-height: 49px; padding: 12px 20px; border: 1px solid var(--color-primary); border-radius: var(--radius-sm); color: var(--color-on-primary); background: var(--color-primary); font-size: 13px; font-weight: 600; transition: background .15s; }
 .submit:hover:not(:disabled) { background: var(--color-primary-hover); }
 .submit:disabled { opacity: .7; }
 .submit > span:last-child { font-size: 20px; line-height: 1; }
-.secure { display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 10px; color: var(--color-muted); margin: 16px 0 29px; }
-.accountHelp { border-top: 1px solid var(--color-border); padding-top: 23px; text-align: center; font-size: 11px; }
+.secure { display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 10px; color: var(--color-muted); margin: 12px 0 clamp(12px, 2svh, 24px); }
+.accountHelp { border-top: 1px solid var(--color-border); padding-top: clamp(12px, 2svh, 20px); text-align: center; font-size: 11px; }
 .accountHelp strong { font-weight: 600; }
 .accountHelp p { margin: 6px 0 0; color: var(--color-muted); }
 .notice, .error { font-size: 12px; padding: 13px 15px; border-radius: var(--radius-sm); margin-bottom: 18px; line-height: 1.6; }
@@ -79,15 +79,15 @@
 @media (min-width: 1500px) { .story { padding-left: 12%; padding-right: 8%; } }
 @media (max-width: 1000px) { .shell { grid-template-columns: minmax(0, 1fr) minmax(360px, 1fr); gap: 24px; padding: 24px; } .story { padding-left: 0; padding-right: 0; } .access { padding-left: 28px; padding-right: 28px; } .careBadge { right: 0; top: 13%; } }
 @media (max-width: 720px) {
-  .shell { grid-template-columns: minmax(0, 1fr); gap: 24px; padding: 20px 14px; }
+  .shell { grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 12px 14px; grid-template-rows: auto 1fr; }
   .story { padding: 8px 12px 0; }
   .brand { font-size: 24px; }
-  .storyContent { padding-top: 30px; }
+  .storyContent { display: none; }
   .story h1 { font-size: 34px; margin-bottom: 15px; }
   .storyContent > p { max-width: 420px; margin-bottom: 0; }
   .illustration, .features, .storyFooter, .topNote { display: none; }
-  .access { padding: 22px; border-radius: 26px; }
-  .formContainer { padding: 28px 0; max-width: 430px; }
+  .access { padding: 16px 22px; border-radius: 26px; }
+  .formContainer { padding: 8px 0 16px; max-width: 430px; }
   .welcomeIcon { display: none; }
   .formContainer h2 { font-size: 28px; }
   .input { font-size: 16px; }
@@ -95,5 +95,20 @@
 }
 @media (prefers-reduced-motion: reduce) { .input, .submit { transition: none; } }
 
-.appearance { align-self: flex-end; margin-bottom: 18px; }
+.appearance { align-self: flex-end; margin-bottom: 6px; }
 @media (max-width: 720px) { .appearance { padding-top: 0; margin-bottom: 0; } }
+
+@media (min-width: 721px) and (max-height: 800px) {
+  .welcomeIcon { display: none; }
+  .story h1 { font-size: clamp(28px, 3vw, 42px); margin-bottom: 12px; }
+  .eyebrow { margin-bottom: 10px; }
+  .features { margin-top: 8px; }
+}
+@media (max-width: 720px) and (max-height: 740px) {
+  .shell { padding-top: 8px; padding-bottom: 8px; gap: 8px; }
+  .access { padding: 12px 18px; }
+  .formContainer h2 { font-size: 24px; margin-bottom: 8px; }
+  .subtitle { margin-bottom: 10px; }
+  .secure { margin: 10px 0; }
+  .accountHelp { padding-top: 10px; }
+}
