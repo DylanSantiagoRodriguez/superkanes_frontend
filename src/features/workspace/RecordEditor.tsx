@@ -88,7 +88,8 @@ export function RecordEditor({
   const editorId = depth ? `editor-title-${depth}` : 'editor-title'
   const selectionRequest = useRef(0)
   const isPet = resource.name === 'mascota'
-  const paired = resource.fields.some(f => f.name === 'mascota_id') && resource.fields.some(f => f.name === 'tutor_contacto_id')
+  const tutorField = resource.fields.find(f => f.reference?.resource === 'tutor')?.name
+  const paired = resource.name !== 'mascota_tutor' && resource.fields.some(f => f.name === 'mascota_id') && Boolean(tutorField)
   const withHistory = resource.name === 'atencion_clinica' && !row
   const revisionResource = catalog.find(item => item.name === 'revision_clinica')
   const fields = [
@@ -219,11 +220,11 @@ export function RecordEditor({
   }
   async function selectRelation(field: Field, id: string, selected?: Row, tutorId?: string) {
     const generation = ++selectionRequest.current
-    if (!paired || !['mascota_id', 'tutor_contacto_id'].includes(field.name)) {
+    if (!paired || !['mascota_id', tutorField].includes(field.name)) {
       setValues(current => ({ ...current, [field.name]: id }))
       return
     }
-    const other = field.name === 'mascota_id' ? 'tutor_contacto_id' : 'mascota_id'
+    const other = field.name === 'mascota_id' ? tutorField! : 'mascota_id'
     const target = other === 'mascota_id' ? 'mascota' : 'tutor'
     const previous = values[other]
     setValues(current => ({ ...current, [field.name]: id, ...(id ? { [other]: '' } : {}) }))
@@ -378,7 +379,7 @@ export function RecordEditor({
           {fields.map((field) => {
             const value = values[field.name] ?? ''
             const ref = field.reference
-            const linkedTo = paired ? (field.name === 'mascota_id' ? values.tutor_contacto_id : field.name === 'tutor_contacto_id' ? values.mascota_id : undefined) || undefined : undefined
+            const linkedTo = paired ? (field.name === 'mascota_id' ? values[tutorField!] : field.name === tutorField ? values.mascota_id : undefined) || undefined : undefined
             const isBreed = isPet && field.name === 'raza_id'
             const options = ref
               ? (withHistory && ref.resource === 'profesional') || catalog.some((r) => r.name === ref.resource)
